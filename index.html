@@ -113,6 +113,10 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .addhw .days{display:flex;gap:6px;flex-wrap:wrap}
 .mini{border:1px solid var(--line);background:#fffefb;border-radius:999px;padding:5px 11px;
   font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}
+.mini.accent{background:var(--accent);border-color:var(--accent);color:#fffdf8}
+.howto{margin:10px 0 12px;padding-left:20px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.howto li{padding:3px 0}
+.howto b{color:var(--ink);font-weight:650}
 .mini:hover{color:var(--ink);border-color:#cfc9bd}
 .paste{margin-top:12px;border:1px dashed var(--line);border-radius:12px;padding:12px;background:#fbf9f3}
 .paste textarea{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;
@@ -324,26 +328,32 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
       <div class="card-hd"><h2>Домашка</h2>
         <div style="display:flex;align-items:center;gap:8px">
           <span class="muted" id="hwCount">0</span>
-          <button class="mini" id="hwOpenPaste">Из МЭШ</button>
+          <button class="mini accent" id="hwOpenPaste">Из МЭШ</button>
         </div>
       </div>
       <div id="hwBody"></div>
       <p class="hint" id="hwNote" style="margin-top:12px" hidden>Это примеры, чтобы было с чего начать. Замени своими: старые убираются крестиком, а внизу можно добавить свои или вставить список из МЭШ.</p>
       <div class="paste" id="hwPaste" hidden>
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
-          <p class="hint" style="font-weight:600;color:var(--ink)">Вставить список из МЭШ</p>
+          <p class="hint" style="font-weight:600;color:var(--ink)">Домашка из МЭШ — три шага</p>
           <button class="mini" id="hwPasteClose">Закрыть</button>
         </div>
-        <p class="hint" style="margin-top:4px">Скопируйте домашку из дневника — можно сразу за неделю — и вставьте сюда. Разберу по предметам и датам сама.</p>
+        <ol class="howto">
+          <li>В МЭШ откройте <b>Задания → Домашние задания</b>. Выделите весь список клавишами <b>Ctrl+A</b> и скопируйте: <b>Ctrl+C</b>.</li>
+          <li>Вернитесь сюда и нажмите <b>«Вставить из буфера»</b>.</li>
+          <li>Проверьте, что нашлось, и нажмите <b>«Добавить»</b>.</li>
+        </ol>
+        <div class="actions"><button class="btn small" id="hwPasteClip">Вставить из буфера</button></div>
+        <p class="hint" style="margin-top:10px">Или вставьте вручную в поле ниже (Ctrl+V) и нажмите «Разобрать».</p>
         <textarea id="hwPasteText" placeholder="Алгебра: № 452, стр. 78&#10;Геометрия — § 12, вопросы 1–4&#10;13 ноября&#10;Физика: упр. 15"></textarea>
-        <div class="actions"><button class="btn small" id="hwParse">Разобрать</button></div>
+        <div class="actions"><button class="btn small ghost" id="hwParse">Разобрать</button></div>
         <div id="hwPreview"></div>
-        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
-          <p class="hint" style="font-weight:600;color:var(--ink)">Взять с сайта МЭШ в один клик</p>
-          <p class="hint" style="margin-top:4px">Перетащите кнопку ниже на панель закладок браузера. Потом откройте в МЭШ страницу с домашкой и нажмите эту закладку — задания приедут сюда сами.</p>
+        <details style="margin-top:14px">
+          <summary class="hint" style="cursor:pointer">Хочу в один клик — закладка для браузера</summary>
+          <p class="hint" style="margin-top:8px">Перетащите кнопку ниже на панель закладок браузера. Потом в МЭШ нажмите эту закладку — и задания сразу откроются здесь уже разобранными.</p>
           <a class="btn small" id="meshBM" href="#" style="margin-top:10px">Взять из МЭШ</a>
-          <p class="hint" style="margin-top:8px">На телефоне закладки неудобны — там просто скопируйте текст из дневника и вставьте в поле выше.</p>
-        </div>
+          <p class="hint" style="margin-top:8px">На телефоне закладки неудобны — там просто копируйте текст и вставляйте в поле выше.</p>
+        </details>
       </div>
       <div class="addhw">
         <div class="row">
@@ -1348,6 +1358,22 @@ $('#hwParse').addEventListener('click',function(){
   var txt=$('#hwPasteText').value;
   if(!txt.trim()){ $('#hwPasteText').focus(); return; }
   renderPreview(parseMesh(txt));
+});
+$('#hwPasteClip').addEventListener('click',function(){
+  var ta=$('#hwPasteText');
+  function fallback(msg){ toast(msg); ta.focus(); }
+  if(!(navigator.clipboard && navigator.clipboard.readText)){
+    return fallback('Браузер не дал доступ к буферу — вставьте вручную: Ctrl+V в поле ниже');
+  }
+  navigator.clipboard.readText().then(function(txt){
+    if(!txt || !txt.trim()) return fallback('В буфере пусто — скопируйте список в МЭШ (Ctrl+A, Ctrl+C)');
+    ta.value=txt;
+    var list=parseMesh(txt);
+    renderPreview(list);
+    toast(list.length? ('Нашла '+list.length+' '+plural(list.length,'задание','задания','заданий')) : 'Не разобрала — проверьте текст в поле ниже');
+  }).catch(function(){
+    fallback('Нужно разрешить доступ к буферу. Или вставьте вручную: Ctrl+V в поле ниже');
+  });
 });
 
 /* закладка для дневника МЭШ */
