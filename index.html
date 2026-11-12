@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c6a5a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Учусь">
+<title>Учусь — помощник для 7 класса</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c6a5a'/%3E%3Cpath d='M18 44V22h10c5 0 8 2.5 8 6s-3 6-8 6h-5v10z' fill='%23fffdf8'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f6f4ef;--surface:#fffdf8;--ink:#221f1b;--muted:#726c62;--line:#e5e0d6;
+  --accent:#1c6a5a;--accent-ink:#0f3f35;--soft:#e6f0ec;--warn:#b04a24;--ok:#1f7a4d;
+  --r:16px;--sh:0 1px 2px rgba(34,31,27,.05),0 10px 26px -18px rgba(34,31,27,.35);
+}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:inherit}
+::selection{background:#cfe6dd}
+
+/* ---------- шапка ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  background:rgba(246,244,239,.88);backdrop-filter:blur(12px);border-bottom:1px solid transparent}
+.top.scrolled{border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fffdf8;
+  display:grid;place-items:center;font:600 19px/1 Georgia,serif;flex:none}
+.brand b{display:block;font:600 17px/1.1 Georgia,serif}
+.brand small{display:block;color:var(--muted);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;white-space:nowrap}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+
+/* ---------- навигация ---------- */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:2px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  background:rgba(255,253,248,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;border-radius:12px;
+  color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.01em}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent-ink);background:var(--soft)}
+
+/* ---------- сетка ---------- */
+main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
+.view[hidden]{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
+.card + .card{margin-top:12px}
+.card.focus{min-height:calc(100vh - 320px);display:flex;flex-direction:column;justify-content:center}
+.card.focus > .csubj{align-self:flex-start}
+@media (min-width:780px){.card.focus{min-height:380px}}
+.card-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.card-hd h2{font-size:19px}
+.card-hd .muted{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.muted{color:var(--muted)}
+.hint{font-size:13.5px;color:var(--muted);line-height:1.45}
+
+/* ---------- сегодня ---------- */
+.hero{padding:18px 4px 12px}
+.hero .date{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.hero h1{font-size:27px;line-height:1.2;margin-top:6px}
+.hero .sub{margin-top:8px;color:var(--muted);font-size:14.5px}
+.statline{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.statline span{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:5px 11px}
+
+.hw-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hw{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:12px;background:#fffefb}
+.hw .tick{flex:none;width:22px;height:22px;border-radius:7px;border:1.6px solid #cfc9bd;margin-top:1px;
+  display:grid;place-items:center;transition:.15s}
+.hw .tick svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;opacity:0}
+.hw.done .tick{background:var(--ok);border-color:var(--ok)}
+.hw.done .tick svg{opacity:1}
+.hw.done .txt{text-decoration:line-through;color:var(--muted)}
+.hw .txt{flex:1;min-width:0;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere}
+.hw .sub{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;padding:1px 7px;border-radius:6px;
+  margin-right:6px;vertical-align:1px}
+.hw .when{flex:none;font-size:11.5px;color:var(--muted);white-space:nowrap;margin-top:3px}
+.hw .when.late{color:var(--warn);font-weight:700}
+.hw .del{flex:none;color:#bdb6aa;font-size:16px;padding:0 2px;line-height:1}
+.hw .del:hover{color:var(--warn)}
+.hw-group{margin-top:14px}
+.hw-group:first-child{margin-top:0}
+.hw-group h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-family:inherit;font-weight:700;margin-bottom:7px}
+
+.addhw{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px}
+.addhw .row{display:flex;gap:8px;flex-wrap:wrap}
+.addhw select,.addhw input{appearance:none;border:1px solid var(--line);background:#fffefb;border-radius:11px;
+  padding:10px 12px;font-size:14.5px;min-width:0}
+.addhw input{flex:1 1 200px}
+.addhw select{flex:0 0 auto;font-weight:600}
+.addhw .days{display:flex;gap:6px;flex-wrap:wrap}
+.mini{border:1px solid var(--line);background:#fffefb;border-radius:999px;padding:5px 11px;
+  font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}
+.mini:hover{color:var(--ink);border-color:#cfc9bd}
+.paste{margin-top:12px;border:1px dashed var(--line);border-radius:12px;padding:12px;background:#fbf9f3}
+.paste textarea{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;
+  padding:10px;font:inherit;font-size:14px;line-height:1.4;background:#fffefb;resize:vertical;margin-top:8px}
+.paste textarea:focus{outline:none;border-color:var(--accent)}
+.pv{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pv li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.35;
+  background:#fffefb;border:1px solid var(--line);border-radius:9px;padding:7px 9px}
+.pv li span{flex:1;min-width:0;overflow-wrap:anywhere}
+.pv li .d{flex:none;font-size:11px;color:var(--muted);white-space:nowrap;padding-top:2px}
+.pv li .x{flex:none;color:#bdb6aa;font-size:15px;line-height:1;padding:0 2px}
+.day{border:1px solid var(--line);background:#fffefb;border-radius:999px;padding:6px 13px;font-size:13px;
+  font-weight:600;color:var(--muted)}
+.day[aria-pressed="true"]{background:var(--soft);border-color:#bcd9cd;color:var(--accent-ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--accent);
+  color:#fffdf8;border-radius:12px;padding:11px 18px;font-size:15px;font-weight:650;box-shadow:var(--sh)}
+.btn:active{transform:translateY(1px)}
+.btn.wide{width:100%}
+.btn.ghost{background:#fffefb;color:var(--ink);border:1px solid var(--line);box-shadow:none;font-weight:600}
+.btn.small{padding:8px 13px;font-size:13.5px;border-radius:10px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+.stuck-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.stuck-b{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fffefb;
+  border-radius:12px;padding:11px 12px;font-size:14px;font-weight:600;text-align:left}
+.stuck-b i{width:8px;height:8px;border-radius:50%;flex:none}
+.stuck-b:active{transform:translateY(1px)}
+
+/* ---------- карточки ---------- */
+.sessbar{height:6px;border-radius:99px;background:#eae5da;overflow:hidden;margin:2px 0 16px}
+.sessbar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.cq{font-family:Georgia,serif;font-size:22px;line-height:1.35;margin:6px 0 4px;overflow-wrap:anywhere}
+.cq.small{font-size:19px}
+.csubj{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-bottom:10px}
+.answer-box{margin-top:16px;padding:14px;border-radius:12px;background:var(--soft);border:1px solid #cfe4da}
+.answer-box .lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);font-weight:700}
+.answer-box .val{font-family:Georgia,serif;font-size:20px;margin-top:4px;overflow-wrap:anywhere}
+.answer-box .note{font-size:13.5px;color:#3d5a50;margin-top:8px;line-height:1.45}
+.cinput{width:100%;margin-top:14px;border:1.5px solid var(--line);background:#fffefb;border-radius:12px;
+  padding:13px 14px;font-size:17px}
+.cinput:focus{outline:none;border-color:var(--accent)}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.actions .btn{flex:1 1 130px}
+.mark-no{background:#fdeee7;color:#8f3a17;border:1px solid #f3d2c2;box-shadow:none}
+.mark-ok{background:var(--ok)}
+.feedback{margin-top:12px;font-size:14.5px;font-weight:600}
+.feedback.no{color:#8f3a17}
+.feedback.ok{color:var(--ok)}
+.center{text-align:center}
+.big{font-family:Georgia,serif;font-size:34px;line-height:1.1}
+.dots{display:flex;gap:6px;justify-content:center;margin:14px 0 0}
+.dots i{width:9px;height:9px;border-radius:50%;background:#ddd6c8}
+.dots i.on{background:var(--accent)}
+
+/* ---------- ступеньки ---------- */
+.subj-chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.subj-chips::-webkit-scrollbar{display:none}
+.schip{flex:none;border:1px solid var(--line);background:#fffefb;border-radius:999px;padding:8px 14px;
+  font-size:13.5px;font-weight:600;white-space:nowrap;color:var(--muted)}
+.schip[aria-pressed="true"]{border-color:transparent;color:#fff}
+.tasklist{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.taskb{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1px solid var(--line);
+  background:#fffefb;border-radius:13px;padding:12px 13px}
+.taskb .num{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  font-size:12px;font-weight:700;color:#fff}
+.taskb .t{flex:1;min-width:0}
+.taskb .t b{display:block;font-size:14.5px;font-weight:650;line-height:1.3}
+.taskb .t span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.taskb .arrow{flex:none;color:#c3bcae;font-size:18px}
+.taskb.done .num{background:var(--ok)!important}
+
+.ladder{list-style:none;margin:0;padding:0}
+.step{padding:13px 0;border-top:1px dashed var(--line)}
+.step:first-child{border-top:0;padding-top:6px}
+.step-no{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.step-q{font-size:15.5px;line-height:1.45;margin-top:5px;overflow-wrap:anywhere}
+.step.solved .step-q{color:var(--muted)}
+.step-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.step-input{flex:1 1 150px;border:1.5px solid var(--line);background:#fffefb;border-radius:11px;
+  padding:11px 12px;font-size:16px;min-width:0}
+.step-input:focus{outline:none;border-color:var(--accent)}
+.step-hint{margin-top:9px;font-size:13.5px;line-height:1.45;color:#6a4a17;background:#fdf3e3;
+  border:1px solid #f0dcbd;border-radius:10px;padding:9px 11px}
+.step-msg{margin-top:8px;font-size:13.5px;font-weight:600}
+.step-msg.no{color:#8f3a17}
+.step-msg.ok{color:var(--ok)}
+.given{font-size:13.5px;color:var(--ok);font-weight:600;margin-top:7px}
+.finalbox{margin-top:16px;padding:14px;border-radius:12px;background:var(--soft);border:1px solid #cfe4da}
+.finalbox .lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--accent-ink)}
+.finalbox .val{font-family:Georgia,serif;font-size:18px;line-height:1.4;margin-top:5px}
+.cond{background:#f4f1e9;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:15px;line-height:1.45;margin-top:10px}
+.back{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;color:var(--muted);padding:4px 0}
+
+/* ---------- доказательства ---------- */
+.seg{display:inline-flex;gap:3px;padding:3px;background:#efeae0;border-radius:999px;margin:12px 0 2px}
+.seg button{padding:8px 15px;border-radius:999px;font-size:13.5px;font-weight:650;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:#fffefb;color:var(--ink);box-shadow:0 1px 3px rgba(34,31,27,.12)}
+.seg button:focus-visible,.pbutton:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.proof-given{margin-top:12px;font-size:14.5px;line-height:1.45}
+.proof-given b{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;font-weight:700}
+.proof-given div+div{margin-top:10px}
+.plist{list-style:none;margin:8px 0 0;padding:0;counter-reset:pf}
+.plist li{position:relative;padding:9px 0 9px 31px;border-top:1px dashed var(--line);font-size:14.5px;line-height:1.4}
+.plist li:first-child{border-top:0}
+.plist li:before{counter-increment:pf;content:counter(pf);position:absolute;left:0;top:9px;width:22px;height:22px;
+  border-radius:6px;background:var(--soft);color:var(--accent-ink);font-size:11px;font-weight:700;display:grid;place-items:center}
+.plist li em{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:2px}
+.palette{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pbutton{text-align:left;border:1px solid var(--line);background:#fffefb;border-radius:11px;padding:10px 12px;
+  font-size:14px;line-height:1.35;transition:.12s}
+.pbutton:active{transform:translateY(1px)}
+.pbutton em{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:3px}
+.pbutton.bad{border-color:#f0c3ae;background:#fdf0e9}
+.pbutton.bad em{color:#8f3a17}
+.pempty{font-size:13.5px;color:var(--muted);border:1px dashed var(--line);border-radius:11px;
+  padding:16px;text-align:center;margin-top:12px}
+
+/* ---------- прогресс ---------- */
+.week{display:flex;gap:6px;justify-content:space-between;margin-top:6px}
+.wd{flex:1;text-align:center}
+.wd i{display:block;height:34px;border-radius:9px;background:#ece7dc;margin-bottom:5px;position:relative}
+.wd i.on{background:var(--accent)}
+.wd i.today{box-shadow:inset 0 0 0 2px var(--accent-ink)}
+.wd span{font-size:10.5px;color:var(--muted)}
+.subj-row{margin-top:12px}
+.subj-row .top2{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px}
+.subj-row .bar{height:7px;border-radius:99px;background:#ece7dc;overflow:hidden}
+.subj-row .bar i{display:block;height:100%;border-radius:99px}
+.parent{background:#f2efe6;border-color:#e2dccf}
+.parent .q{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:7px 0;
+  border-bottom:1px solid #e2dccf}
+.parent .q:last-of-type{border-bottom:0}
+.parent .q b{font-variant-numeric:tabular-nums}
+.reset{color:#a8502c;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:2px;
+  margin-top:12px;display:inline-block}
+
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--accent-ink);color:#fffdf8;font-size:13.5px;font-weight:600;padding:10px 16px;
+  border-radius:999px;z-index:60;box-shadow:0 8px 24px -10px rgba(0,0,0,.5);max-width:90vw;text-align:center}
+.toast[hidden]{display:none}
+
+@media (min-width:780px){
+  body{padding-bottom:40px}
+  .top{padding-left:0;padding-right:0;max-width:920px;margin:0 auto}
+  main{padding:0 0 40px}
+  .tabs{position:static;grid-template-columns:repeat(4,auto);justify-content:center;gap:6px;
+    background:none;border:0;backdrop-filter:none;padding:8px 0 14px;max-width:920px;margin:0 auto}
+  .tab{flex-direction:row;gap:8px;font-size:14px;padding:9px 16px;border-radius:999px}
+  .tab svg{width:18px;height:18px}
+  .hero h1{font-size:32px}
+  .stuck-grid{grid-template-columns:repeat(6,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="brand">
+    <div class="mark">У</div>
+    <div><b>Учусь</b><small>7 класс · помощник</small></div>
+  </div>
+  <div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div>
+</header>
+
+<nav class="tabs" id="tabs" aria-label="Разделы">
+  <button class="tab" data-view="today" aria-current="page">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M8.5 13.2l2.4 2.4L16 11"/></svg><span>Сегодня</span>
+  </button>
+  <button class="tab" data-view="cards">
+    <svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="13" rx="2.5"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3H19a2 2 0 0 1 2 2v9.5"/></svg><span>5 минут</span>
+  </button>
+  <button class="tab" data-view="steps">
+    <svg viewBox="0 0 24 24"><path d="M4 19h5v-4h5v-4h6"/></svg><span>Ступеньки</span>
+  </button>
+  <button class="tab" data-view="progress">
+    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.3 1.1 6.1L12 17l-5.3 2.8 1.1-6.1L3.4 9.4l6-.8z"/></svg><span>Прогресс</span>
+  </button>
+</nav>
+
+<main>
+  <!-- СЕГОДНЯ -->
+  <section class="view" id="v-today">
+    <div class="hero">
+      <div class="date" id="todayDate">—</div>
+      <h1 id="greet">Привет</h1>
+      <p class="sub" id="todaySub">—</p>
+      <div class="statline" id="todayStats"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Домашка</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="muted" id="hwCount">0</span>
+          <button class="mini" id="hwOpenPaste">Из МЭШ</button>
+        </div>
+      </div>
+      <div id="hwBody"></div>
+      <div class="paste" id="hwPaste" hidden>
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+          <p class="hint" style="font-weight:600;color:var(--ink)">Вставить список из МЭШ</p>
+          <button class="mini" id="hwPasteClose">Закрыть</button>
+        </div>
+        <p class="hint" style="margin-top:4px">Скопируйте домашку из дневника — можно сразу за неделю — и вставьте сюда. Разберу по предметам и датам сама.</p>
+        <textarea id="hwPasteText" placeholder="Алгебра: № 452, стр. 78&#10;Геометрия — § 12, вопросы 1–4&#10;13 ноября&#10;Физика: упр. 15"></textarea>
+        <div class="actions"><button class="btn small" id="hwParse">Разобрать</button></div>
+        <div id="hwPreview"></div>
+      </div>
+      <div class="addhw">
+        <div class="row">
+          <select id="hwSubj" aria-label="Предмет"></select>
+          <input id="hwText" type="text" placeholder="Что задано: «№ 452, стр. 78»" autocomplete="off">
+        </div>
+        <div class="row" style="align-items:center">
+          <div class="days" id="hwDays">
+            <button class="day" data-d="0" aria-pressed="true">Сегодня</button>
+            <button class="day" data-d="1" aria-pressed="false">Завтра</button>
+            <button class="day" data-d="2" aria-pressed="false">Послезавтра</button>
+          </div>
+          <button class="btn small" id="hwAdd" style="margin-left:auto">Добавить</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Пять минут</h2><span class="muted" id="dueTxt">—</span></div>
+      <p class="hint" id="cardsHint">Карточки по всем предметам вперемешку. Ошибся — вернётся через день, а не через минуту.</p>
+      <div style="margin-top:14px"><button class="btn wide" id="startCards">Начать повторение</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Застрял?</h2></div>
+      <p class="hint">Выбери предмет — приложение будет задавать вопросы, а не выдавать ответ.</p>
+      <div class="stuck-grid" id="stuckGrid"></div>
+    </div>
+  </section>
+
+  <!-- КАРТОЧКИ -->
+  <section class="view" id="v-cards" hidden>
+    <div class="card" id="cardsBody"></div>
+  </section>
+
+  <!-- СТУПЕНЬКИ -->
+  <section class="view" id="v-steps" hidden>
+    <div class="card">
+      <div class="card-hd"><h2>Ступеньки</h2><span class="muted" id="stepsCount">—</span></div>
+      <div class="seg" id="stepsSeg">
+        <button data-mode="tasks" aria-pressed="true">Задачи</button>
+        <button data-mode="proofs" aria-pressed="false">Доказательства</button>
+      </div>
+      <p class="hint" style="margin-top:8px" id="stepsHint">Подсказка за подсказкой — до ответа дойдёшь сам.</p>
+      <div class="subj-chips" id="subjChips" style="margin-top:12px"></div>
+      <div class="tasklist" id="taskList"></div>
+    </div>
+  </section>
+
+  <!-- ПРОГРЕСС -->
+  <section class="view" id="v-progress" hidden>
+    <div id="progressBody"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ============================================================
+   Данные
+   ============================================================ */
+var SUBJ = {
+  alg:{n:'Алгебра', c:'#3f6ad8', t:'#e9eefc'},
+  geo:{n:'Геометрия', c:'#7b53c7', t:'#f0eafa'},
+  phy:{n:'Физика', c:'#c9761d', t:'#fbf0e2'},
+  bio:{n:'Биология', c:'#2c8a5f', t:'#e6f4ec'},
+  fr:{n:'Французский', c:'#c2455f', t:'#fbeaee'},
+  en:{n:'Английский', c:'#1c7f96', t:'#e3f2f5'}
+};
+var KEYS = ['alg','geo','phy','bio','fr','en'];
+
+/* карточки: [предмет, режим, вопрос, ответ, пояснение]
+   type — ввод ответа, self — «вспомнил / не вспомнил» */
+var RAW_CARDS = [
+  ['alg','type','Вынеси общий множитель: 4x + 6','2(2x+3)','Общий множитель 2: 4x + 6 = 2·2x + 2·3.'],
+  ['alg','type','Разность квадратов: x² − 25','(x-5)(x+5)','a² − b² = (a − b)(a + b), где b = 5.'],
+  ['alg','type','Квадрат суммы: (a + 3)²','a²+6a+9','(a + b)² = a² + 2ab + b².'],
+  ['alg','type','Упрости: a³ · a⁴','a⁷','При умножении степеней с одинаковым основанием показатели складываются.'],
+  ['alg','self','Что означает запись a⁻¹?','1/a','Отрицательная степень переворачивает дробь.'],
+  ['alg','type','Реши уравнение: 3x = 12','4','Раздели обе части на 3.'],
+  ['alg','type','Упрости: 5y − 2y','3y','Подобные слагаемые просто вычитаются.'],
+  ['alg','self','Что является графиком функции y = kx + b?','Прямая','k отвечает за наклон, b — точка пересечения с осью Oy.'],
+  ['alg','type','Приведи подобные: 2a + 3b − a + b','a+4b','2a − a = a, 3b + b = 4b.'],
+  ['alg','self','За что отвечает коэффициент k в y = kx + b?','За наклон прямой','k > 0 — возрастает, k < 0 — убывает.'],
+  ['alg','type','Частное степеней: a⁶ : a²','a⁴','При делении показатели вычитаются.'],
+  ['alg','type','Раскрой скобки: 3(x − 2)','3x-6','3·x − 3·2.'],
+
+  ['geo','self','Сумма углов треугольника','180°','Это теорема о сумме углов треугольника.'],
+  ['geo','self','Сумма смежных углов','180°','Смежные углы всегда дают развёрнутый угол.'],
+  ['geo','self','Вертикальные углы…','Равны','Образуются при пересечении двух прямых.'],
+  ['geo','self','Углы при основании равнобедренного треугольника','Равны','Поэтому, зная угол при вершине, находим два остальных.'],
+  ['geo','self','Первый признак равенства треугольников','По двум сторонам и углу между ними','Сторона — угол — сторона.'],
+  ['geo','self','Второй признак равенства треугольников','По стороне и двум прилежащим углам','Угол — сторона — угол.'],
+  ['geo','self','Третий признак равенства треугольников','По трём сторонам','Сторона — сторона — сторона.'],
+  ['geo','self','Внешний угол треугольника равен…','Сумме двух внутренних, не смежных с ним','Не путать со смежным углом: он дополняет до 180°.'],
+  ['geo','self','Медиана треугольника','Отрезок от вершины до середины противоположной стороны','Все три медианы пересекаются в одной точке.'],
+  ['geo','self','Высота треугольника','Перпендикуляр из вершины к противоположной стороне','Может падать на продолжение стороны.'],
+  ['geo','self','Биссектриса угла','Делит угол пополам','В треугольнике делит противоположную сторону пропорционально сторонам.'],
+  ['geo','self','Признак параллельности прямых','Если накрест лежащие углы равны, прямые параллельны','Ещё: соответственные равны, односторонние в сумме 180°.'], 
+
+  ['phy','self','Формула плотности','ρ = m / V','Плотность — масса единицы объёма.'],
+  ['phy','self','Единица плотности в СИ','кг/м³','В задачах часто встречается г/см³: 1 г/см³ = 1000 кг/м³.'],
+  ['phy','self','Формула скорости','v = S / t','Путь делить на время.'],
+  ['phy','type','Переведи 36 км/ч в м/с','10','Делим на 3,6.'],
+  ['phy','self','Формула силы тяжести','F = m · g','Сила в ньютонах.'],
+  ['phy','self','Чему равно g у поверхности Земли','≈ 10 Н/кг','Точнее 9,8 Н/кг, в задачах обычно берут 10.'],
+  ['phy','self','Формула давления','p = F / S','Сила делить на площадь опоры.'],
+  ['phy','self','Единица давления','Паскаль (Па)','1 Па = 1 Н/м².'],
+  ['phy','self','Формула механической работы','A = F · s','Джоуль.'],
+  ['phy','self','Единица работы и энергии','Джоуль (Дж)','1 Дж = 1 Н·м.'],
+  ['phy','type','1 кПа — это сколько Па?','1000','Приставка «кило» — тысяча.'],
+  ['phy','self','Что такое инерция','Сохранение скорости тела, если на него не действуют силы','Инертность — свойство тела менять скорость не мгновенно.'],
+
+  ['bio','self','Теплокровные классы позвоночных','Птицы и млекопитающие','Остальные зависят от температуры среды.'],
+  ['bio','self','Сердце рыб','Двухкамерное','Один круг кровообращения.'],
+  ['bio','self','Сердце птиц и млекопитающих','Четырёхкамерное','Два круга, артериальная и венозная кровь не смешиваются.'],
+  ['bio','self','Кожа земноводных','Голая и влажная, участвует в дыхании','Поэтому лягушки живут у воды.'],
+  ['bio','type','Сколько ног у насекомого?','6','Три пары.'],
+  ['bio','self','Из каких отделов состоит тело насекомого','Голова, грудь, брюшко','У паукообразных — головогрудь и брюшко.'],
+  ['bio','self','У кого есть стрекательные клетки','У кишечнополостных (гидра, медуза)','Ими они парализуют добычу.'],
+  ['bio','self','Как питаются грибы','Гетеротрофно, готовой органикой','Поэтому грибы не растения.'],
+  ['bio','self','Из чего состоит клеточная стенка грибов','Из хитина','У растений — из целлюлозы.'],
+  ['bio','self','Есть ли ядро у бактерий','Нет, ядро отсутствует','Поэтому бактерии — безъядерные.'],
+  ['bio','self','Что такое двусторонняя симметрия','Тело делится на две зеркальные половины','Характерна для большинства животных.'],
+  ['bio','self','Что такое фотосинтез','Образование органики из CO₂ и воды на свету','Происходит с участием хлорофилла.'],
+
+  ['fr','self','être — je …','suis','Быть.'],
+  ['fr','self','avoir — tu …','as','Иметь.'],
+  ['fr','self','aller — nous …','allons','Идти.'],
+  ['fr','self','parler — ils …','parlent','Говорить, -er группа.'],
+  ['fr','self','la maison','дом',''],
+  ['fr','self','l’école','школа',''],
+  ['fr','self','aujourd’hui','сегодня',''],
+  ['fr','self','demain','завтра',''],
+  ['fr','self','hier','вчера',''],
+  ['fr','self','toujours','всегда',''],
+  ['fr','self','jamais','никогда',''],
+  ['fr','self','parce que','потому что',''],
+  ['fr','self','le devoir','домашнее задание',''],
+  ['fr','self','beaucoup','много',''],
+
+  ['en','self','go — past — V3','went — gone',''],
+  ['en','self','see — past — V3','saw — seen',''],
+  ['en','self','buy — past — V3','bought — bought',''],
+  ['en','self','think — past — V3','thought — thought',''],
+  ['en','self','write — past — V3','wrote — written',''],
+  ['en','self','speak — past — V3','spoke — spoken',''],
+  ['en','self','good — сравнительная степень','better',''],
+  ['en','self','bad — сравнительная степень','worse',''],
+  ['en','self','health','здоровье',''],
+  ['en','self','advice','совет','Неисчисляемое: без «an».'],
+  ['en','self','improve','улучшать',''],
+  ['en','self','although','хотя',''],
+  ['en','self','journey','путешествие, поездка',''],
+  ['en','self','however','однако','']
+];
+
+/* задачи-лестницы */
+var TASKS = [
+  {id:'a1',s:'alg',t:'Вынести общий множитель',cond:'6x + 9',
+   steps:[
+     {q:'Что общего у чисел 6 и 9?',chk:['3'],hint:'Наибольшее число, на которое делятся и 6, и 9.'},
+     {q:'Раздели каждый член на 3 и запиши, что осталось внутри скобки.',chk:['2x+3','3+2x'],hint:'6x : 3 = 2x, 9 : 3 = 3.'},
+     {q:'Запиши ответ целиком.',chk:['3(2x+3)','(2x+3)3'],hint:'Множитель 3 стоит перед скобкой.'}
+   ],fin:'3(2x + 3)'},
+
+  {id:'a2',s:'alg',t:'Квадрат суммы',cond:'(x + 5)²',
+   steps:[
+     {q:'Чему равно (a + b)²?',chk:['a2+2ab+b2'],hint:'Квадрат первого плюс удвоенное произведение плюс квадрат второго.'},
+     {q:'Подставь a = x, b = 5. Что получится?',chk:['x2+10x+25'],hint:'2·x·5 = 10x, а 5² = 25.'}
+   ],fin:'x² + 10x + 25'},
+
+  {id:'a3',s:'alg',t:'Уравнение',cond:'5x − 7 = 3x + 5',
+   steps:[
+     {q:'Перенеси всё с x в левую часть. Что получится?',chk:['2x-7=5'],hint:'5x − 3x = 2x.'},
+     {q:'Теперь перенеси числа вправо.',chk:['2x=12'],hint:'−7 переезжает как +7: 5 + 7 = 12.'},
+     {q:'Чему равен x?',chk:['6','x=6'],hint:'Раздели обе части на 2.'}
+   ],fin:'x = 6'},
+
+  {id:'a4',s:'alg',t:'Минус перед скобкой',cond:'4a − (2a − 3)',
+   steps:[
+     {q:'Раскрой скобки. Что получится до приведения подобных?',chk:['4a-2a+3'],hint:'Минус меняет знак каждого слагаемого: −(2a − 3) = −2a + 3.'},
+     {q:'Приведи подобные. Ответ?',chk:['2a+3','3+2a'],hint:'4a − 2a = 2a, число 3 остаётся.'}
+   ],fin:'2a + 3'},
+
+  {id:'a5',s:'alg',t:'График и оси',cond:'y = −2x + 3. Где прямая пересекает ось Oy?',
+   steps:[
+     {q:'Чему равен x на оси Oy?',chk:['0'],hint:'На оси Oy все точки имеют x = 0.'},
+     {q:'Подставь x = 0 в формулу. Чему равен y?',chk:['3','y=3'],hint:'−2 · 0 = 0, остаётся 3.'}
+   ],fin:'Точка (0; 3)'},
+
+  {id:'g1',s:'geo',t:'Третий угол',cond:'В треугольнике два угла равны 50° и 60°. Найди третий.',
+   steps:[
+     {q:'Чему равна сумма углов треугольника?',chk:['180'],hint:'Это теорема о сумме углов треугольника.'},
+     {q:'Сложи известные углы.',chk:['110'],hint:'50 + 60 = 110.'},
+     {q:'Найди третий угол.',chk:['70'],hint:'180 − 110.'}
+   ],fin:'70°'},
+
+  {id:'g2',s:'geo',t:'Смежные углы',cond:'Один из смежных углов равен 40°. Найди второй.',
+   steps:[
+     {q:'Чему равна сумма смежных углов?',chk:['180'],hint:'Они вместе образуют развёрнутый угол.'},
+     {q:'Найди второй угол.',chk:['140'],hint:'180 − 40.'}
+   ],fin:'140°'},
+
+  {id:'g3',s:'geo',t:'Равнобедренный треугольник',cond:'Угол при вершине равнобедренного треугольника равен 40°. Найди углы при основании.',
+   steps:[
+     {q:'Какие углы в равнобедренном треугольнике равны?',chk:['при основании','приосновании'],hint:'Равны углы при основании.'},
+     {q:'Сколько градусов остаётся на два угла при основании?',chk:['140'],hint:'180 − 40 = 140.'},
+     {q:'Чему равен каждый из них?',chk:['70'],hint:'140 : 2.'}
+   ],fin:'По 70° каждый'},
+
+  {id:'g4',s:'geo',t:'Признак равенства',cond:'Докажи: треугольники равны, если две стороны и угол между ними одного равны двум сторонам и углу между ними другого.',
+   steps:[
+     {q:'Какой это признак по счёту?',chk:['первый','1','первыйпризнак'],hint:'Сторона — угол — сторона.'},
+     {q:'Что обязательно стоит между равными сторонами?',chk:['угол','уголмеждуними'],hint:'Именно угол между ними, а не любой.'},
+     {q:'Сформулируй вывод одной фразой — «треугольники равны по …»',chk:null,hint:'По первому признаку.'}
+   ],fin:'Треугольники равны по первому признаку: по двум сторонам и углу между ними.'},
+
+  {id:'p1',s:'phy',t:'Плотность',cond:'Масса тела 780 г, объём 100 см³. Найди плотность.',
+   steps:[
+     {q:'Запиши формулу плотности.',chk:['m/v','p=m/v'],hint:'ρ = m / V.'},
+     {q:'Подставь числа (в граммах и кубических сантиметрах).',chk:['7.8'],hint:'780 : 100 = 7,8.'},
+     {q:'В каких единицах получился ответ?',chk:['г/см3'],hint:'Масса в граммах, объём в см³.'}
+   ],fin:'ρ = 7,8 г/см³ = 7800 кг/м³'},
+
+  {id:'p2',s:'phy',t:'Скорость',cond:'Тело прошло 300 м за 20 с. Найди скорость.',
+   steps:[
+     {q:'Какая формула связывает путь, время и скорость?',chk:['v=s/t','s/t'],hint:'v = S / t.'},
+     {q:'Сосчитай.',chk:['15','15м/с'],hint:'300 : 20.'},
+     {q:'Переведи в км/ч (умножь на 3,6).',chk:['54','54км/ч'],hint:'15 · 3,6.'}
+   ],fin:'15 м/с = 54 км/ч'},
+
+  {id:'p3',s:'phy',t:'Сила тяжести',cond:'Масса тела 5 кг. Найди силу тяжести (g ≈ 10 Н/кг).',
+   steps:[
+     {q:'Запиши формулу силы тяжести.',chk:['f=mg','mg'],hint:'F = m · g.'},
+     {q:'Подставь и посчитай.',chk:['50','50н'],hint:'5 · 10.'},
+     {q:'В чём измеряется сила?',chk:['н','ньютон','ньютоны'],hint:'По фамилии учёного.'}
+   ],fin:'F = 50 Н'},
+
+  {id:'p4',s:'phy',t:'Давление',cond:'Сила 200 Н действует на площадь 0,04 м². Найди давление.',
+   steps:[
+     {q:'Запиши формулу давления.',chk:['p=f/s','f/s'],hint:'p = F / S.'},
+     {q:'Посчитай: 200 : 0,04.',chk:['5000','5000па'],hint:'Делить на 0,04 — то же, что умножить на 25.'},
+     {q:'Сколько это килопаскалей?',chk:['5','5кпа'],hint:'1 кПа = 1000 Па.'}
+   ],fin:'p = 5000 Па = 5 кПа'},
+
+  {id:'b1',s:'bio',t:'Теплокровные',cond:'Какие классы позвоночных животных теплокровные?',
+   steps:[
+     {q:'У рыб температура тела постоянная или зависит от среды?',chk:['зависит','зависитотсреды','непостоянная'],hint:'Рыбы холоднокровные.'},
+     {q:'А у птиц?',chk:['постоянная','постояннаятемпература'],hint:'Птицы теплокровные.'},
+     {q:'Значит, теплокровные — это …',chk:['птицыимлекопитающие','млекопитающиеиптицы'],hint:'Два класса.'}
+   ],fin:'Птицы и млекопитающие.'},
+
+  {id:'b2',s:'bio',t:'Конечности',cond:'Сколько ног у насекомых, паукообразных и ракообразных?',
+   steps:[
+     {q:'Сколько ног у насекомого?',chk:['6','шесть'],hint:'Три пары.'},
+     {q:'А у паука?',chk:['8','восемь'],hint:'Четыре пары.'},
+     {q:'А у рака?',chk:['10','десять'],hint:'Пять пар.'}
+   ],fin:'Насекомые — 6, паукообразные — 8, ракообразные — 10.'},
+
+  {id:'b3',s:'bio',t:'Сердце',cond:'Сколько камер в сердце у рыбы, земноводного и птицы?',
+   steps:[
+     {q:'У рыбы?',chk:['2','две'],hint:'Один круг кровообращения.'},
+     {q:'У земноводного (лягушки)?',chk:['3','три'],hint:'Два круга, кровь частично смешивается.'},
+     {q:'У птицы и млекопитающего?',chk:['4','четыре'],hint:'Полное разделение крови.'}
+   ],fin:'Рыбы — 2, земноводные и пресмыкающиеся — 3, птицы и млекопитающие — 4.'},
+
+  {id:'b4',s:'bio',t:'Почему грибы не растения',cond:'Объясни, почему грибы выделяют в отдельное царство.',
+   steps:[
+     {q:'Как питаются грибы — создают органику сами или берут готовую?',chk:['готовую','берутготовую','гетеротрофы'],hint:'Грибы — гетеротрофы.'},
+     {q:'Есть ли у грибов хлорофилл?',chk:['нет'],hint:'Без хлорофилла фотосинтез невозможен.'},
+     {q:'Что в клеточной стенке грибов вместо целлюлозы?',chk:['хитин'],hint:'То же вещество — в покровах насекомых.'}
+   ],fin:'Грибы — гетеротрофы, без хлорофилла, клеточная стенка из хитина.'},
+
+  {id:'f1',s:'fr',t:'Глагол être',cond:'Проспрягай être: je, nous, ils.',
+   steps:[
+     {q:'je … ?',chk:['suis'],hint:'je suis.'},
+     {q:'nous … ?',chk:['sommes'],hint:'nous sommes.'},
+     {q:'ils … ?',chk:['sont'],hint:'ils sont.'}
+   ],fin:'je suis, tu es, il est, nous sommes, vous êtes, ils sont'},
+
+  {id:'f2',s:'fr',t:'Глагол avoir',cond:'Проспрягай avoir: j’, vous, ils.',
+   steps:[
+     {q:'j’… ?',chk:['ai'],hint:'j’ai.'},
+     {q:'vous … ?',chk:['avez'],hint:'vous avez.'},
+     {q:'ils … ?',chk:['ont'],hint:'ils ont.'}
+   ],fin:'j’ai, tu as, il a, nous avons, vous avez, ils ont'},
+
+  {id:'f3',s:'fr',t:'Глагол aller',cond:'Проспрягай aller: je, nous, ils.',
+   steps:[
+     {q:'je … ?',chk:['vais'],hint:'je vais.'},
+     {q:'nous … ?',chk:['allons'],hint:'nous allons.'},
+     {q:'ils … ?',chk:['vont'],hint:'ils vont.'}
+   ],fin:'je vais, tu vas, il va, nous allons, vous allez, ils vont'},
+
+  {id:'f4',s:'fr',t:'Passé composé',cond:'Как сказать «я говорил» (parler)?',
+   steps:[
+     {q:'Какой вспомогательный глагол у parler в passé composé?',chk:['avoir'],hint:'Почти все глаголы идут с avoir.'},
+     {q:'Причастие прошедшего времени от parler?',chk:['parle','parlé'],hint:'parler → parlé.'},
+     {q:'Собери фразу «я говорил».',chk:['jaiparle','j’aiparle'],hint:'j’ai + parlé.'}
+   ],fin:'J’ai parlé.'},
+
+  {id:'e1',s:'en',t:'Неправильные глаголы',cond:'Три формы: go, see, take.',
+   steps:[
+     {q:'go — … — …',chk:['wentgone'],hint:'went, gone.'},
+     {q:'see — … — …',chk:['sawseen'],hint:'saw, seen.'},
+     {q:'take — … — …',chk:['tooktaken'],hint:'took, taken.'}
+   ],fin:'go — went — gone; see — saw — seen; take — took — taken'},
+
+  {id:'e2',s:'en',t:'Present Perfect',cond:'Как сказать «я сделал домашку»?',
+   steps:[
+     {q:'Вспомогательный глагол для I в Present Perfect?',chk:['have'],hint:'I have…'},
+     {q:'Третья форма глагола do?',chk:['done'],hint:'do — did — done.'},
+     {q:'Собери всю фразу.',chk:['ihavedonemyhomework'],hint:'I + have + done + my homework.'}
+   ],fin:'I have done my homework.'},
+
+  {id:'e3',s:'en',t:'Степени сравнения',cond:'Сравнительная степень: big, good, interesting.',
+   steps:[
+     {q:'big — … ?',chk:['bigger'],hint:'Удваиваем согласную: bigger.'},
+     {q:'good — … ?',chk:['better'],hint:'Исключение.'},
+     {q:'interesting — … ?',chk:['moreinteresting'],hint:'Длинные слова — через more.'}
+   ],fin:'bigger, better, more interesting'},
+
+  {id:'e4',s:'en',t:'Past Simple',cond:'Как сказать «вчера я пошёл в школу»?',
+   steps:[
+     {q:'Past Simple от go?',chk:['went'],hint:'go — went — gone.'},
+     {q:'Собери всю фразу.',chk:['iwenttoschoolyesterday','yesterdayiwenttoschool'],hint:'I went to school yesterday.'}
+   ],fin:'I went to school yesterday.'}
+];
+
+var CARD_LIST = RAW_CARDS.map(function(r,i){
+  return {id:r[0]+'-'+i, s:r[0], mode:r[1], q:r[2], a:r[3], note:r[4]||''};
+});
+var TASK_BY_ID = {};
+TASKS.forEach(function(t){ TASK_BY_ID[t.id] = t; });
+
+/* доказательства — сборка из блоков */
+var PROOFS = [
+  {id:'d1', t:'Смежные углы',
+   g:'∠AOC и ∠COB — смежные углы', p:'∠AOC + ∠COB = 180°',
+   steps:[
+     {s:'∠AOC + ∠COB = ∠AOB', r:'луч OC проходит между сторонами угла AOB'},
+     {s:'∠AOB = 180°', r:'угол AOB развёрнутый'},
+     {s:'∠AOC + ∠COB = 180°', r:'подставляем значение вместо ∠AOB'}
+   ],
+   wrongs:[
+     {s:'∠AOC = ∠COB', r:'вертикальные углы',
+      note:'Вертикальные углы получаются при пересечении двух прямых. Здесь углы смежные, они не обязаны быть равными.'},
+     {s:'∠AOC + ∠COB = 90°', r:'оба угла острые',
+      note:'Острые углы в сумме 90° не дают. Смежные вместе составляют развёрнутый угол.'}
+   ]},
+
+  {id:'d2', t:'Равнобедренный треугольник',
+   g:'ΔABC, AB = BC, BD — медиана', p:'∠ABD = ∠CBD',
+   steps:[
+     {s:'AD = DC', r:'BD — медиана, значит делит AC пополам'},
+     {s:'AB = BC', r:'по условию, треугольник равнобедренный'},
+     {s:'BD — общая сторона', r:'принадлежит обоим треугольникам'},
+     {s:'ΔABD = ΔCBD', r:'по трём сторонам — третий признак'},
+     {s:'∠ABD = ∠CBD', r:'в равных треугольниках против равных сторон лежат равные углы'}
+   ],
+   wrongs:[
+     {s:'ΔABD = ΔCBD', r:'по двум сторонам и углу между ними',
+      note:'Для первого признака нужен равный угол между сторонами — а его мы как раз и доказываем.'},
+     {s:'∠A = ∠C', r:'углы при основании равнобедренного треугольника',
+      note:'Это верное свойство, но для равенства треугольников одних углов мало.'}
+   ]},
+
+  {id:'d3', t:'Сумма углов треугольника',
+   g:'ΔABC', p:'∠A + ∠B + ∠C = 180°',
+   steps:[
+     {s:'Проведём через вершину B прямую a, параллельную AC', r:'дополнительное построение'},
+     {s:'∠1 = ∠A', r:'накрест лежащие при a ∥ AC и секущей AB'},
+     {s:'∠2 = ∠C', r:'накрест лежащие при a ∥ AC и секущей BC'},
+     {s:'∠1 + ∠B + ∠2 = 180°', r:'эти углы вместе составляют развёрнутый угол при вершине B'},
+     {s:'∠A + ∠B + ∠C = 180°', r:'заменили ∠1 и ∠2 равными им углами'}
+   ],
+   wrongs:[
+     {s:'∠1 = ∠A', r:'как соответственные углы',
+      note:'Соответственные лежат по одну сторону от секущей, а здесь углы лежат накрест.'},
+     {s:'∠A + ∠B + ∠C = 360°', r:'сумма углов фигуры',
+      note:'360° — это сумма углов четырёхугольника, а не треугольника.'}
+   ]},
+
+  {id:'d4', t:'Вертикальные углы',
+   g:'прямые AB и CD пересекаются в точке O', p:'∠AOC = ∠BOD',
+   steps:[
+     {s:'∠AOC + ∠AOD = 180°', r:'смежные углы'},
+     {s:'∠BOD + ∠AOD = 180°', r:'смежные углы'},
+     {s:'∠AOC + ∠AOD = ∠BOD + ∠AOD', r:'обе суммы равны 180°'},
+     {s:'∠AOC = ∠BOD', r:'вычли ∠AOD из обеих частей'}
+   ],
+   wrongs:[
+     {s:'∠AOC = ∠AOD', r:'вертикальные углы',
+      note:'∠AOC и ∠AOD — смежные, а не вертикальные: они в сумме дают 180°.'},
+     {s:'∠AOC = ∠BOD', r:'накрест лежащие при параллельных прямых',
+      note:'Накрест лежащие бывают только при параллельных прямых и секущей, а здесь просто две пересекающиеся прямые.'}
+   ]}
+];
+var PROOF_BY_ID = {};
+PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
+
+/* ============================================================
+   Состояние
+   ============================================================ */
+var KEY = 'uchus_v1';
+var st = load();
+function blank(){
+  return {v:1, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return blank();
+    var o = JSON.parse(raw);
+    if(!o || typeof o !== 'object') return blank();
+    var b = blank();
+    for(var k in b) if(!(k in o)) o[k] = b[k];
+    return o;
+  }catch(e){ return blank(); }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){}
+}
+
+/* ============================================================
+   Утилиты
+   ============================================================ */
+function $(s,r){ return (r||document).querySelector(s); }
+function $$(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+function el(tag,cls,html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function iso(d){ var x=new Date(d.getTime()-d.getTimezoneOffset()*60000); return x.toISOString().slice(0,10); }
+function today(){ return iso(new Date()); }
+function addDays(s,n){ var d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return iso(d); }
+var MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+var WDAY=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+function prettyDate(s){
+  var d=new Date(s+'T12:00:00');
+  return d.getDate()+' '+MON[d.getMonth()];
+}
+function fullDate(s){
+  var d=new Date(s+'T12:00:00');
+  return WDAY[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()];
+}
+function plural(n,a,b,c){
+  var n10=n%10, n100=n%100;
+  if(n10===1 && n100!==11) return a;
+  if(n10>=2 && n10<=4 && (n100<10||n100>=20)) return b;
+  return c;
+}
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/ё/g,'е')
+    .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a').replace(/[îï]/g,'i')
+    .replace(/[ôö]/g,'o').replace(/[ûüù]/g,'u').replace(/ç/g,'c').replace(/œ/g,'oe')
+    .replace(/[’'"`]/g,'')
+    .replace(/²/g,'2').replace(/³/g,'3').replace(/⁴/g,'4')
+    .replace(/[°·×*]/g,'').replace(/:/g,'/')
+    .replace(/[−–—]/g,'-')
+    .replace(/\s+/g,'')
+    .replace(/;/g,'');
+}
+function matches(input, answers){
+  if(!answers) return false;
+  var a = norm(input), a2 = a.replace(/\./g,''), an = a.replace(/,/g,'.');
+  for(var i=0;i<answers.length;i++){
+    var n = norm(answers[i]), n2 = n.replace(/\./g,''), n3 = n.replace(/,/g,'.');
+    if(a===n||a2===n2||an===n3) return true;
+  }
+  return false;
+}
+function subjTag(s){
+  var S=SUBJ[s];
+  return '<span class="sub" style="background:'+S.t+';color:'+S.c+'">'+S.n+'</span>';
+}
+var toastT=null;
+function toast(msg){
+  var t=$('#toast'); t.textContent=msg; t.hidden=false;
+  clearTimeout(toastT); toastT=setTimeout(function(){ t.hidden=true; },2200);
+}
+
+/* ============================================================
+   Навигация
+   ============================================================ */
+var curView='today';
+function go(v){
+  curView=v;
+  $$('.tab').forEach(function(b){
+    if(b.dataset.view===v) b.setAttribute('aria-current','page');
+    else b.removeAttribute('aria-current');
+  });
+  ['today','cards','steps','progress'].forEach(function(k){
+    $('#v-'+k).hidden = (k!==v);
+  });
+  window.scrollTo({top:0,behavior:'instant'});
+  if(v==='today') renderToday();
+  if(v==='cards') renderCardsHome();
+  if(v==='steps') renderSteps();
+  if(v==='progress') renderProgress();
+}
+$('#tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  go(b.dataset.view);
+});
+window.addEventListener('scroll',function(){
+  $('#top').classList.toggle('scrolled', window.scrollY>4);
+},{passive:true});
+
+/* ============================================================
+   Сегодня
+   ============================================================ */
+function streakDays(){ return st.streak.count||0; }
+function activeToday(){ return (st.streak.days||[]).indexOf(today())>=0; }
+
+function renderStreak(){
+  var n=streakDays();
+  $('#streakTxt').textContent='серия '+n+' '+plural(n,'день','дня','дней');
+}
+
+function dueCards(){
+  var t=today(), out=[];
+  CARD_LIST.forEach(function(c){
+    var r=st.cards[c.id];
+    if(r && r.due<=t) out.push(c);
+  });
+  return out;
+}
+function freshCards(){
+  return CARD_LIST.filter(function(c){ return !st.cards[c.id]; });
+}
+function sessionPlan(){
+  var due=dueCards(), fresh=freshCards(), plan=[];
+  plan=plan.concat(due.slice(0,10));
+  var room=12-plan.length;
+  if(room>0) plan=plan.concat(fresh.slice(0,room));
+  if(plan.length<6){
+    var weak=CARD_LIST.filter(function(c){ return st.cards[c.id] && plan.indexOf(c)<0; })
+      .sort(function(a,b){ return (st.cards[a.id].b||0)-(st.cards[b.id].b||0); });
+    plan=plan.concat(weak.slice(0, 6-plan.length));
+  }
+  return plan;
+}
+
+function renderToday(){
+  var d=today();
+  $('#todayDate').textContent=fullDate(d);
+  var h=new Date().getHours();
+  var g = h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
+  $('#greet').textContent=g;
+  var plan=sessionPlan(), due=dueCards().length;
+  $('#todaySub').textContent = due>0
+    ? 'К повторению '+due+' '+plural(due,'карточка','карточки','карточек')+'. Это минуты четыре.'
+    : 'Карточки ждут. Пять минут — и свободен.';
+  $('#todayStats').innerHTML =
+    '<span>серия '+streakDays()+'</span>'+
+    '<span>карточек '+plan.length+'</span>'+
+    '<span>домашек '+(st.hw.filter(function(x){return !x.done;}).length)+'</span>';
+  $('#dueTxt').textContent = plan.length+' '+plural(plan.length,'карточка','карточки','карточек');
+  $('#startCards').textContent = plan.length? 'Начать повторение · '+plan.length : 'Начать повторение';
+  renderHw();
+  renderStuck();
+  renderStreak();
+}
+
+function hwGroup(h){
+  var d=today();
+  if(h.due<d) return 0;
+  if(h.due===d) return 1;
+  if(h.due===addDays(d,1)) return 2;
+  return 3;
+}
+function renderHw(){
+  var list=st.hw.slice().sort(function(a,b){ return a.due<b.due?-1:a.due>b.due?1:0; });
+  var open=list.filter(function(h){ return !h.done; });
+  var done=list.filter(function(h){ return h.done; });
+  var box=$('#hwBody');
+  $('#hwCount').textContent = !list.length ? 'пусто' : (open.length? open.length+' в работе' : 'всё сделано');
+  if(!list.length){
+    box.innerHTML='<p class="hint">Пока пусто. Запиши задание сама или вставь готовый список — кнопка «Из МЭШ» выше.</p>';
+    return;
+  }
+  var groups=[[],[],[],[]];
+  open.forEach(function(h){ groups[hwGroup(h)].push(h); });
+  var names=['Просрочено','Сегодня','Завтра','Позже'];
+  var html='';
+  groups.forEach(function(g,i){
+    if(!g.length) return;
+    html+='<div class="hw-group"><h3>'+names[i]+'</h3><ul class="hw-list">';
+    g.forEach(function(h){ html+=hwRow(h); });
+    html+='</ul></div>';
+  });
+  if(done.length){
+    html+='<div class="hw-group"><h3>Сделано</h3><ul class="hw-list">';
+    done.slice(0,6).forEach(function(h){ html+=hwRow(h); });
+    html+='</ul></div>';
+  }
+  box.innerHTML=html;
+}
+function hwRow(h){
+  var late = !h.done && h.due<today();
+  var when = h.due===today()?'сегодня': h.due===addDays(today(),1)?'завтра': prettyDate(h.due);
+  return '<li class="hw'+(h.done?' done':'')+'" data-id="'+h.id+'">'+
+    '<button class="tick" data-act="tick" aria-label="Готово"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>'+
+    '<div class="txt">'+subjTag(h.s)+esc(h.text)+'</div>'+
+    '<div class="when'+(late?' late':'')+'">'+when+'</div>'+
+    '<button class="del" data-act="del" aria-label="Удалить">×</button></li>';
+}
+$('#hwBody').addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]'); if(!b) return;
+  var li=e.target.closest('.hw'); if(!li) return;
+  var id=li.dataset.id, act=b.dataset.act;
+  if(act==='del'){
+    st.hw=st.hw.filter(function(h){ return h.id!==id; });
+  }else{
+    st.hw.forEach(function(h){ if(h.id===id) h.done=!h.done; });
+  }
+  save(); renderHw(); renderToday0();
+});
+function renderToday0(){
+  $('#todayStats').innerHTML =
+    '<span>серия '+streakDays()+'</span>'+
+    '<span>карточек '+sessionPlan().length+'</span>'+
+    '<span>домашек '+st.hw.filter(function(x){return !x.done;}).length+'</span>';
+}
+
+/* форма домашки */
+var hwOffset=0;
+(function initHwForm(){
+  var sel=$('#hwSubj');
+  KEYS.forEach(function(k){
+    var o=document.createElement('option'); o.value=k; o.textContent=SUBJ[k].n; sel.appendChild(o);
+  });
+  $('#hwDays').addEventListener('click',function(e){
+    var b=e.target.closest('.day'); if(!b) return;
+    hwOffset=parseInt(b.dataset.d,10);
+    $$('.day',$('#hwDays')).forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); });
+  });
+  function add(){
+    var txt=$('#hwText').value.trim();
+    if(!txt){ $('#hwText').focus(); return; }
+    st.hw.push({id:'h'+Date.now(), s:$('#hwSubj').value, text:txt, due:addDays(today(),hwOffset), done:false});
+    $('#hwText').value='';
+    save(); renderHw(); renderToday0(); toast('Записано');
+  }
+  $('#hwAdd').addEventListener('click',add);
+  $('#hwText').addEventListener('keydown',function(e){ if(e.key==='Enter') add(); });
+})();
+
+/* ---------- разбор списка из МЭШ ---------- */
+var MONTH_KEYS=[['январ',0],['феврал',1],['март',2],['апрел',3],['ма',4],['июн',5],['июл',6],['август',7],['сентябр',8],['октябр',9],['ноябр',10],['декабр',11]];
+var SUBJ_STEMS=[['alg',['алгебр']],['geo',['геометр']],['phy',['физик']],['bio',['биолог']],['fr',['француз','франц']],['en',['англ']]];
+var SKIP_STEMS=['русск','литератур','истор','обществ','географ','информатик','музык','изо','технолог','физкультур','обж','мхк','вероятн','статистик','экономик','астроном','родн'];
+var parsedBuf=[];
+
+function monthIdx(word){
+  var w=String(word).toLowerCase().replace(/ё/g,'е');
+  for(var i=0;i<MONTH_KEYS.length;i++){ if(w.indexOf(MONTH_KEYS[i][0])===0) return MONTH_KEYS[i][1]; }
+  return -1;
+}
+function mkDate(day,mi){
+  var t=new Date(), y=t.getFullYear(), d=new Date(y,mi,day);
+  if((t-d)>180*864e5) d=new Date(y+1,mi,day);
+  return iso(d);
+}
+function detectDate(line){
+  var s=String(line).toLowerCase().replace(/ё/g,'е').trim();
+  if(/^сегодня\b/.test(s)) return today();
+  if(/^завтра\b/.test(s)) return addDays(today(),1);
+  if(/^послезавтра\b/.test(s)) return addDays(today(),2);
+  var m=s.match(/(?:^|на\s+|к\s+)(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?/);
+  if(m) return mkDate(parseInt(m[1],10), parseInt(m[2],10)-1);
+  m=s.match(/(?:^|на\s+|к\s+)(\d{1,2})\s+([а-я]+)/);
+  if(m){ var mi=monthIdx(m[2]); if(mi>=0) return mkDate(parseInt(m[1],10),mi); }
+  return null;
+}
+function findHits(line){
+  var low=String(line).toLowerCase(), hits=[];
+  function wordEnd(i,len){
+    var j=i+len;
+    while(j<low.length && /[а-яёa-z]/.test(low.charAt(j))) j++;
+    return j-i;
+  }
+  SUBJ_STEMS.forEach(function(p){
+    p[1].forEach(function(st){
+      var i=low.indexOf(st);
+      while(i>=0){ hits.push({i:i,len:wordEnd(i,st.length),k:p[0]}); i=low.indexOf(st,i+1); }
+    });
+  });
+  SKIP_STEMS.forEach(function(st){
+    var i=low.indexOf(st);
+    while(i>=0){ hits.push({i:i,len:wordEnd(i,st.length),k:'skip'}); i=low.indexOf(st,i+1); }
+  });
+  hits.sort(function(a,b){ return a.i-b.i || b.len-a.len; });
+  var out=[];
+  hits.forEach(function(h){
+    var last=out[out.length-1];
+    if(last && h.i<last.i+last.len) return;
+    out.push(h);
+  });
+  return out;
+}
+function segmentsOf(line){
+  var h=findHits(line), out=[];
+  for(var i=0;i<h.length;i++){
+    var start=h[i].i+h[i].len, end=(i+1<h.length?h[i+1].i:line.length);
+    out.push({k:h[i].k, text:line.slice(start,end)});
+  }
+  return out;
+}
+function parseMesh(raw){
+  var items=[], ctx=null, last=null;
+  String(raw).split(/\r?\n/).forEach(function(l0){
+    var line=l0.replace(/\u00a0/g,' ').replace(/^[\s•·*\-–—]+/,'').trim();
+    if(!line) return;
+    var segs=segmentsOf(line);
+    if(!segs.length){
+      var d=detectDate(line);
+      if(d && line.length<=60){ ctx=d; last=null; return; }
+      if(last && line.length>1) last.text=(last.text+' '+line).trim();
+      return;
+    }
+    segs.forEach(function(sg){
+      var txt=sg.text.replace(/^[\s:—–\-;,.]+/,'');
+      txt=txt.replace(/^язык[а-я]*[\s:\-–—]*/i,'');
+      txt=txt.replace(/[\s;,]+$/,'').trim();
+      if(sg.k==='skip'){ last=null; return; }
+      var it={s:sg.k, text:txt, due:ctx||null};
+      items.push(it); last=it;
+    });
+  });
+  var def=addDays(today(),1);
+  items=items.filter(function(it){ return it.text.length>0; });
+  items.forEach(function(it){ if(!it.due) it.due=def; });
+  return items;
+}
+function hwLabel(d){
+  if(d===today()) return 'сегодня';
+  if(d===addDays(today(),1)) return 'завтра';
+  return prettyDate(d);
+}
+function renderPreview(list){
+  var box=$('#hwPreview');
+  parsedBuf=list;
+  if(!list.length){
+    box.innerHTML='<p class="hint" style="margin-top:10px">Не разобрала ни одной строки. Попробуй формат «Алгебра: задание» — по одной строке на предмет.</p>';
+    return;
+  }
+  box.innerHTML='<ul class="pv">'+list.map(function(it,i){
+    return '<li><span>'+subjTag(it.s)+' '+esc(it.text)+'</span><span class="d">'+hwLabel(it.due)+'</span>'+
+      '<button class="x" data-rm="'+i+'" aria-label="Убрать">×</button></li>';
+  }).join('')+'</ul><div class="actions"><button class="btn small" id="hwAddParsed">Добавить '+list.length+'</button></div>';
+  $('#hwAddParsed').addEventListener('click',function(){
+    var added=0;
+    parsedBuf.forEach(function(it){
+      var dup=st.hw.some(function(h){ return h.s===it.s && h.text===it.text && h.due===it.due; });
+      if(dup) return;
+      st.hw.push({id:'h'+Date.now()+Math.floor(Math.random()*1000), s:it.s, text:it.text, due:it.due, done:false});
+      added++;
+    });
+    save(); renderHw(); renderToday0(); closePaste();
+    toast(added? ('Добавила '+added+' '+plural(added,'задание','задания','заданий')) : 'Всё это уже в списке');
+  });
+  $$('#hwPreview .x').forEach(function(b){
+    b.addEventListener('click',function(){
+      var i=parseInt(b.dataset.rm,10);
+      list.splice(i,1); renderPreview(list);
+    });
+  });
+}
+function closePaste(){
+  $('#hwPaste').hidden=true;
+  $('#hwPasteText').value='';
+  $('#hwPreview').innerHTML='';
+  parsedBuf=[];
+}
+$('#hwOpenPaste').addEventListener('click',function(){
+  var open=$('#hwPaste').hidden;
+  $('#hwPaste').hidden=!open;
+  if(open){ $('#hwPasteText').focus(); $('#hwPaste').scrollIntoView({behavior:'smooth',block:'nearest'}); }
+});
+$('#hwPasteClose').addEventListener('click',closePaste);
+$('#hwParse').addEventListener('click',function(){
+  var txt=$('#hwPasteText').value;
+  if(!txt.trim()){ $('#hwPasteText').focus(); return; }
+  renderPreview(parseMesh(txt));
+});
+
+function renderStuck(){
+  var g=$('#stuckGrid');
+  g.innerHTML=KEYS.map(function(k){
+    return '<button class="stuck-b" data-subj="'+k+'"><i style="background:'+SUBJ[k].c+'"></i>'+SUBJ[k].n+'</button>';
+  }).join('');
+}
+$('#stuckGrid').addEventListener('click',function(e){
+  var b=e.target.closest('.stuck-b'); if(!b) return;
+  stepsState.mode='tasks'; stepsState.subj=b.dataset.subj; stepsState.taskId=null; proofState.id=null;
+  go('steps');
+});
+
+/* ============================================================
+   Пять минут
+   ============================================================ */
+var IV=[0,1,2,4,8,16];      // интервалы по «коробкам»
+var sess=null;
+
+function renderCardsHome(){
+  var plan=sessionPlan();
+  var learned=CARD_LIST.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
+  var seen=Object.keys(st.cards).length;
+  $('#cardsBody').classList.remove('focus');
+  var rows='';
+  KEYS.forEach(function(k){
+    var all=CARD_LIST.filter(function(c){ return c.s===k; });
+    var lern=all.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
+    rows+='<div class="subj-row"><div class="top2"><span>'+SUBJ[k].n+'</span>'+
+      '<span class="muted">'+lern+' / '+all.length+'</span></div>'+
+      '<div class="bar"><i style="width:'+Math.round(lern/all.length*100)+'%;background:'+SUBJ[k].c+'"></i></div></div>';
+  });
+  $('#cardsBody').innerHTML =
+    '<div class="center" style="padding:4px 0 2px">'+
+      '<div class="big">'+learned+'</div>'+
+      '<p class="muted" style="font-size:13.5px">карточек уже в памяти · в колоде '+CARD_LIST.length+'</p>'+
+    '</div>'+
+    '<div style="margin-top:16px"><button class="btn wide" id="goCards">'+
+      (plan.length?'Начать · '+plan.length+' '+plural(plan.length,'карточка','карточки','карточек'):'Всё повторено')+
+    '</button></div>'+
+    '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">'+rows+'</div>'+
+    '<p class="hint" style="margin-top:16px">Правило простое: ошибся — карточка вернётся завтра. Вспомнил — через несколько дней. Так запоминается надолго, а не до контрольной.</p>'+
+    (seen? '<p class="hint" style="margin-top:8px">Уже видел(а) '+seen+' из '+CARD_LIST.length+'.</p>':'');
+  var b=$('#goCards');
+  if(b) b.addEventListener('click',startSession);
+}
+$('#startCards').addEventListener('click',startSession);
+
+function startSession(){
+  var plan=sessionPlan();
+  if(!plan.length){ toast('На сегодня всё повторено'); return; }
+  sess={q:plan, i:0, ok:0, res:0, t0:Date.now(), reveal:false, again:{}};
+  go('cards'); renderCard();
+}
+
+function cardMark(id,good){
+  var r=st.cards[id] || {b:0,due:today(),seen:0,ok:0};
+  r.seen=(r.seen||0)+1;
+  if(good){ r.b=Math.min((r.b||0)+1,5); r.ok=(r.ok||0)+1; }
+  else{ r.b=0; }
+  r.due=addDays(today(), good ? IV[r.b] : 1);
+  st.cards[id]=r;
+  st.total.answers=(st.total.answers||0)+1;
+  if(!st.ans) st.ans={};
+  var kk=today(); st.ans[kk]=(st.ans[kk]||0)+1;
+}
+
+function finishSession(){
+  var mins=Math.max(1, Math.round((Date.now()-sess.t0)/60000));
+  var d=today();
+  st.minutes[d]=(st.minutes[d]||0)+mins;
+  st.total.sessions=(st.total.sessions||0)+1;
+  if(st.streak.last!==d){
+    st.streak.count = (st.streak.last===addDays(d,-1)) ? (st.streak.count||0)+1 : 1;
+    st.streak.last=d;
+  }
+  if(!st.streak.days) st.streak.days=[];
+  if(st.streak.days.indexOf(d)<0) st.streak.days.push(d);
+  if(st.streak.days.length>60) st.streak.days=st.streak.days.slice(-60);
+  save(); renderStreak();
+  var total=sess.ok+sess.res;
+  $('#cardsBody').classList.add('focus');
+  $('#cardsBody').innerHTML =
+    '<div class="center" style="padding:14px 0 6px">'+
+      '<div class="big">'+sess.ok+' / '+total+'</div>'+
+      '<p class="muted" style="margin-top:6px">'+mins+' '+plural(mins,'минута','минуты','минут')+' · серия '+streakDays()+' '+plural(streakDays(),'день','дня','дней')+'</p>'+
+      '<div class="dots">'+dotRow()+'</div>'+
+    '</div>'+
+    '<p class="hint center" style="margin-top:16px">'+(sess.ok>=Math.ceil(total*0.8)?'Хорошо пошло.':'Ничего страшного — то, что не вспомнилось, вернётся завтра.')+'</p>'+
+    '<div class="actions"><button class="btn wide" id="againCards">Ещё подход</button></div>'+
+    '<div class="actions"><button class="btn ghost wide" id="toToday">На сегодня хватит</button></div>';
+  $('#againCards').addEventListener('click',function(){ renderCardsHome(); startSession(); });
+  $('#toToday').addEventListener('click',function(){ go('today'); });
+  sess=null;
+}
+function dotRow(){
+  var h='';
+  for(var i=0;i<7;i++){
+    var d=addDays(today(),-6+i);
+    var on=(st.streak.days||[]).indexOf(d)>=0;
+    h+='<i class="'+(on?'on':'')+'"></i>';
+  }
+  return h;
+}
+
+function renderCard(){
+  if(!sess) return;
+  var c=sess.q[sess.i];
+  if(!c){ finishSession(); return; }
+  var n=sess.q.length, pct=Math.round(sess.i/n*100);
+  var S=SUBJ[c.s];
+  $('#cardsBody').classList.add('focus');
+  var html=''+
+    '<div class="sessbar"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="muted" style="font-size:12.5px;margin-bottom:10px">'+ (sess.i+1)+' из '+n+'</div>'+
+    '<span class="csubj" style="background:'+S.t+';color:'+S.c+'">'+S.n+'</span>'+
+    '<div class="cq'+(c.q.length>46?' small':'')+'">'+esc(c.q)+'</div>'+
+    '<div id="cardZone"></div>';
+  $('#cardsBody').innerHTML=html;
+  var z=$('#cardZone');
+  if(c.mode==='self'){
+    if(!sess.reveal){
+      z.innerHTML='<div class="actions"><button class="btn wide" id="rev">Показать ответ</button></div>'+
+        '<p class="hint center" style="margin-top:10px">Сначала вспомни про себя — это и есть тренировка.</p>';
+      $('#rev').addEventListener('click',function(){ sess.reveal=true; renderCard(); });
+    }else{
+      z.innerHTML='<div class="answer-box"><div class="lab">Ответ</div><div class="val">'+esc(c.a)+'</div>'+
+        (c.note?'<div class="note">'+esc(c.note)+'</div>':'')+'</div>'+
+        '<div class="actions">'+
+          '<button class="btn mark-no" id="no">Не вспомнил</button>'+
+          '<button class="btn mark-ok" id="yes">Знал</button>'+
+        '</div>';
+      $('#no').addEventListener('click',function(){ grade(false); });
+      $('#yes').addEventListener('click',function(){ grade(true); });
+    }
+  }else{
+    if(!sess.reveal){
+      z.innerHTML='<input class="cinput" id="cin" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ответ">'+
+        '<div class="actions"><button class="btn wide" id="chk">Проверить</button></div>'+
+        '<p class="hint center" style="margin-top:10px">Пиши коротко: только ответ, без «ответ:».</p>';
+      var inp=$('#cin'); inp.focus();
+      function tryCheck(){
+        var v=inp.value;
+        if(!v.trim()) return;
+        if(matches(v,[c.a])){ sess.ok++; cardMark(c.id,true); sess.reveal=true; save();
+          var zz=$('#cardZone');
+          zz.innerHTML='<div class="answer-box"><div class="lab">Верно</div><div class="val">'+esc(c.a)+'</div>'+
+            (c.note?'<div class="note">'+esc(c.note)+'</div>':'')+'</div>'+
+            '<div class="actions"><button class="btn wide" id="nx">Дальше</button></div>';
+          $('#nx').addEventListener('click',nextCard);
+        }else{
+          sess.res++; cardMark(c.id,false); sess.reveal=true; save();
+          var z2=$('#cardZone');
+          z2.innerHTML='<div class="answer-box"><div class="lab">Правильный ответ</div><div class="val">'+esc(c.a)+'</div>'+
+            (c.note?'<div class="note">'+esc(c.note)+'</div>':'')+'</div>'+
+            '<div class="actions"><button class="btn wide" id="nx">Понял, дальше</button></div>';
+          $('#nx').addEventListener('click',nextCard);
+        }
+      }
+      $('#chk').addEventListener('click',tryCheck);
+      inp.addEventListener('keydown',function(e){ if(e.key==='Enter') tryCheck(); });
+    }
+  }
+}
+function grade(good){
+  var c=sess.q[sess.i];
+  if(good) sess.ok++; else sess.res++;
+  cardMark(c.id,good); save();
+  nextCard();
+}
+function nextCard(){
+  sess.i++; sess.reveal=false;
+  if(sess.i>=sess.q.length) finishSession();
+  else renderCard();
+}
+
+/* ============================================================
+   Ступеньки
+   ============================================================ */
+var stepsState={mode:'tasks', subj:null, taskId:null, step:0, hint:false, msg:null, given:[]};
+var proofState={id:null, cur:0, bad:null, pool:[]};
+
+function renderSteps(){
+  if(!stepsState.subj) stepsState.subj='alg';
+  var mode=stepsState.mode||'tasks';
+  $$('#stepsSeg button').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.mode===mode?'true':'false');
+  });
+  var chips=$('#subjChips');
+  $('#stepsHint').textContent = mode==='proofs'
+    ? 'Собери доказательство из готовых шагов. Ошибёшься — приложение объяснит, почему шаг не подходит.'
+    : 'Подсказка за подсказкой — до ответа дойдёшь сам.';
+  if(mode==='proofs'){
+    chips.style.display='none';
+    var doneP=PROOFS.filter(function(p){ return st.proofs[p.id]; }).length;
+    $('#stepsCount').textContent=doneP+' из '+PROOFS.length;
+    if(proofState.id){ renderProof(); return; }
+    $('#taskList').innerHTML=PROOFS.map(function(p,i){
+      var done=!!st.proofs[p.id];
+      return '<button class="taskb" data-proof="'+p.id+'">'+
+        '<span class="num" style="background:'+(done?'#1f7a4d':'#7b53c7')+'">'+(done?'✓':(i+1))+'</span>'+
+        '<span class="t"><b>'+esc(p.t)+'</b><span>'+esc(p.p)+'</span></span>'+
+        '<span class="arrow">›</span></button>';
+    }).join('');
+    return;
+  }
+  chips.style.display='';
+  chips.innerHTML=KEYS.map(function(k){
+    var on=k===stepsState.subj;
+    return '<button class="schip" data-subj="'+k+'" aria-pressed="'+(on?'true':'false')+'"'+
+      (on?' style="background:'+SUBJ[k].c+'"':'')+'>'+SUBJ[k].n+'</button>';
+  }).join('');
+  var list=TASKS.filter(function(t){ return t.s===stepsState.subj; });
+  var doneCount=TASKS.filter(function(t){ return st.tasks[t.id]; }).length;
+  $('#stepsCount').textContent=doneCount+' из '+TASKS.length;
+  if(stepsState.taskId){ renderTask(); return; }
+  $('#taskList').innerHTML=list.map(function(t,i){
+    var done=!!st.tasks[t.id];
+    return '<button class="taskb" data-task="'+t.id+'">'+
+      '<span class="num" style="background:'+(done?'#1f7a4d':SUBJ[t.s].c)+'">'+(done?'✓':(i+1))+'</span>'+
+      '<span class="t"><b>'+esc(t.t)+'</b><span>'+esc(t.cond)+'</span></span>'+
+      '<span class="arrow">›</span></button>';
+  }).join('');
+}
+$('#stepsSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  stepsState.mode=b.dataset.mode; stepsState.taskId=null; proofState.id=null;
+  renderSteps();
+});
+
+/* ---------- конструктор доказательств ---------- */
+function openProof(id){
+  var p=PROOF_BY_ID[id];
+  var pool=[];
+  p.steps.forEach(function(s,i){
+    pool.push({s:s.s, r:s.r, ok:true, stepIdx:i, note:'Этот шаг понадобится позже — сначала нужен другой.'});
+  });
+  p.wrongs.forEach(function(w){
+    pool.push({s:w.s, r:w.r, ok:false, stepIdx:-1, note:w.note});
+  });
+  for(var i=pool.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1)), t=pool[i]; pool[i]=pool[j]; pool[j]=t;
+  }
+  proofState={id:id, cur:0, bad:null, pool:pool};
+  st.stuck.push({s:'geo', id:id, at:new Date().toISOString()});
+  if(st.stuck.length>80) st.stuck=st.stuck.slice(-80);
+  save(); renderProof();
+}
+function renderProof(){
+  var p=PROOF_BY_ID[proofState.id];
+  if(!p){ proofState.id=null; renderSteps(); return; }
+  var cur=proofState.cur;
+  var html='<button class="back" id="backProofs">‹ все доказательства</button>'+
+    '<h3 style="font-size:19px;margin:6px 0 2px">'+esc(p.t)+'</h3>'+
+    '<div class="proof-given"><div><b>Дано</b>'+esc(p.g)+'</div><div><b>Доказать</b>'+esc(p.p)+'</div></div>';
+  if(cur>0){
+    html+='<ol class="plist">';
+    for(var i=0;i<cur;i++){
+      html+='<li>'+esc(p.steps[i].s)+'<em>'+esc(p.steps[i].r)+'</em></li>';
+    }
+    html+='</ol>';
+  }else{
+    html+='<div class="pempty">Пока пусто. Выбери, с чего начать доказательство.</div>';
+  }
+  if(cur<p.steps.length){
+    html+='<p class="hint" style="margin-top:16px">Что запишем '+(cur===0?'первым':'дальше')+'?</p><div class="palette">';
+    proofState.pool.forEach(function(it,idx){
+      if(it.used) return;
+      var bad=(proofState.bad===idx);
+      html+='<button class="pbutton'+(bad?' bad':'')+'" data-pal="'+idx+'">'+esc(it.s)+
+        '<em>'+(bad?esc(it.note):esc(it.r))+'</em></button>';
+    });
+    html+='</div>';
+  }else{
+    html+='<div class="finalbox"><div class="lab">Доказано</div><div class="val">'+esc(p.p)+'</div></div>'+
+      '<div class="actions"><button class="btn wide" id="backProofs2">К другим доказательствам</button></div>'+
+      '<div class="actions"><button class="btn ghost wide" id="pagain">Собрать заново</button></div>'+
+      '<p class="hint center" style="margin-top:10px">Так и пишут в тетради: утверждение — и рядом обоснование.</p>';
+  }
+  $('#taskList').innerHTML=html;
+  $('#stepsCount').textContent=PROOFS.filter(function(x){ return st.proofs[x.id]; }).length+' из '+PROOFS.length;
+  var bl=$('#backProofs'); if(bl) bl.addEventListener('click',function(){ proofState.id=null; renderSteps(); });
+  var bl2=$('#backProofs2'); if(bl2) bl2.addEventListener('click',function(){ proofState.id=null; renderSteps(); });
+  var ag=$('#pagain'); if(ag) ag.addEventListener('click',function(){ openProof(p.id); });
+  $$('.pbutton').forEach(function(b){
+    b.addEventListener('click',function(){
+      var idx=parseInt(b.dataset.pal,10), it=proofState.pool[idx];
+      if(!it) return;
+      if(it.ok && it.stepIdx===proofState.cur){
+        it.used=true; proofState.cur++; proofState.bad=null;
+        if(proofState.cur>=p.steps.length){
+          st.proofs[p.id]={at:new Date().toISOString()}; save();
+        }
+        renderProof();
+      }else{
+        proofState.bad=idx; renderProof();
+      }
+    });
+  });
+}
+$('#subjChips').addEventListener('click',function(e){
+  var b=e.target.closest('.schip'); if(!b) return;
+  stepsState={subj:b.dataset.subj,taskId:null,step:0,hint:false,msg:null,given:[]};
+  renderSteps();
+});
+$('#taskList').addEventListener('click',function(e){
+  var b=e.target.closest('.taskb'); if(!b) return;
+  if(b.dataset.proof){ openProof(b.dataset.proof); return; }
+  openTask(b.dataset.task);
+});
+function openTask(id){
+  stepsState.taskId=id; stepsState.step=0; stepsState.hint=false; stepsState.msg=null; stepsState.given=[];
+  st.stuck.push({s:TASK_BY_ID[id].s, id:id, at:new Date().toISOString()});
+  if(st.stuck.length>80) st.stuck=st.stuck.slice(-80);
+  save();
+  renderTask();
+}
+function renderTask(){
+  var t=TASK_BY_ID[stepsState.taskId];
+  if(!t){ renderSteps(); return; }
+  var S=SUBJ[t.s];
+  var html='<button class="back" id="backList">‹ все задачи</button>'+
+    '<h3 style="font-size:19px;margin:6px 0 2px">'+esc(t.t)+'</h3>'+
+    '<div class="cond">'+esc(t.cond)+'</div>'+
+    '<ol class="ladder" id="ladder">';
+  for(var i=0;i<=stepsState.step && i<t.steps.length;i++){
+    var s=t.steps[i], solved=i<stepsState.step, cur=(i===stepsState.step);
+    html+='<li class="step'+(solved?' solved':'')+'" data-i="'+i+'">'+
+      '<div class="step-no">Ступень '+(i+1)+'</div>'+
+      '<div class="step-q">'+esc(s.q)+'</div>';
+    if(solved){
+      html+='<div class="given">✓ '+esc(stepsState.given[i]||'верно')+'</div>';
+    }else if(cur){
+      if(s.chk){
+        html+='<div class="step-row">'+
+          '<input class="step-input" id="si" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Твой ответ">'+
+          '<button class="btn small" id="schk">Проверить</button>'+
+          '<button class="btn small ghost" id="shint">Подсказка</button></div>'+
+          (stepsState.hint?'<div class="step-hint">'+esc(s.hint)+'</div>':'')+
+          '<div class="step-msg'+(stepsState.msg&&stepsState.msg.bad?' no':'')+'" id="smsg">'+
+            (stepsState.msg&&stepsState.msg.bad?'Пока не то. Попробуй ещё раз или открой подсказку.':'')+'</div>';
+      }else{
+        html+='<div class="step-row"><button class="btn small" id="snext">Дальше</button>'+
+          '<button class="btn small ghost" id="shint">Подсказка</button></div>'+
+          (stepsState.hint?'<div class="step-hint">'+esc(s.hint)+'</div>':'');
+      }
+    }
+    html+='</li>';
+  }
+  html+='</ol>';
+  if(stepsState.step>=t.steps.length){
+    html+='<div class="finalbox"><div class="lab">Ответ</div><div class="val">'+esc(t.fin)+'</div></div>'+
+      '<div class="actions"><button class="btn wide" id="backToList">К другим задачам</button></div>'+
+      '<div class="actions"><button class="btn ghost wide" id="tagain">Решить заново</button></div>'+
+      '<p class="hint center" style="margin-top:10px">Если можешь объяснить каждый шаг — тема твоя.</p>';
+    if(!st.tasks[t.id]){
+      st.tasks[t.id]={at:new Date().toISOString()};
+      save();
+    }
+  }
+  $('#taskList').innerHTML=html;
+  $('#stepsCount').textContent=TASKS.filter(function(x){ return st.tasks[x.id]; }).length+' из '+TASKS.length;
+  $('#backList').addEventListener('click',function(){
+    stepsState.taskId=null; renderSteps();
+  });
+  bindStep(t);
+}
+function bindStep(t){
+  var s=t.steps[stepsState.step];
+  if(!s) return;
+  var hi=$('#shint');
+  if(hi) hi.addEventListener('click',function(){
+    stepsState.hint=true; stepsState.msg=null; renderTask();
+    var inp=$('#si'); if(inp) inp.focus();
+  });
+  var chk=$('#schk');
+  if(chk) chk.addEventListener('click',function(){
+    var inp=$('#si'), v=inp.value.trim();
+    if(!v){ inp.focus(); return; }
+    if(matches(v,s.chk)){
+      stepsState.given[stepsState.step]=v;
+      stepsState.step++; stepsState.hint=false; stepsState.msg=null;
+      renderTask();
+    }else{
+      stepsState.msg={bad:true}; renderTask();
+      var inp2=$('#si'); if(inp2){ inp2.value=v; inp2.focus(); }
+    }
+  });
+  var inp=$('#si');
+  if(inp){
+    inp.focus();
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){ e.preventDefault(); var c=$('#schk'); if(c) c.click(); }
+    });
+  }
+  var nx=$('#snext');
+  if(nx) nx.addEventListener('click',function(){
+    stepsState.given[stepsState.step]='';
+    stepsState.step++; stepsState.hint=false; stepsState.msg=null;
+    renderTask();
+  });
+  var ag=$('#tagain');
+  if(ag) ag.addEventListener('click',function(){
+    stepsState.step=0; stepsState.hint=false; stepsState.msg=null; stepsState.given=[];
+    renderTask();
+  });
+  var bl=$('#backToList');
+  if(bl) bl.addEventListener('click',function(){ stepsState.taskId=null; renderSteps(); });
+}
+
+/* ============================================================
+   Прогресс
+   ============================================================ */
+function renderProgress(){
+  var d=today();
+  var learned=CARD_LIST.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
+  var seen=Object.keys(st.cards).length;
+  var tasksDone=TASKS.filter(function(t){ return st.tasks[t.id]; }).length;
+  var h='';
+
+  h+='<div class="card"><div class="card-hd"><h2>Серия</h2><span class="muted">'+streakDays()+' '+plural(streakDays(),'день','дня','дней')+'</span></div>'+
+    '<div class="week">';
+  for(var i=0;i<7;i++){
+    var dd=addDays(d,-6+i);
+    var on=(st.streak.days||[]).indexOf(dd)>=0;
+    var wd=new Date(dd+'T12:00:00').getDay();
+    h+='<div class="wd"><i class="'+(on?'on':'')+(dd===d?' today':'')+'"></i><span>'+['вс','пн','вт','ср','чт','пт','сб'][wd]+'</span></div>';
+  }
+  h+='</div><p class="hint" style="margin-top:12px">Закрашенный день — было хотя бы одно повторение. Пропустил день — серия начинается заново, но карточки никуда не деваются.</p></div>';
+
+  h+='<div class="card"><div class="card-hd"><h2>Карточки</h2><span class="muted">'+learned+' в памяти из '+CARD_LIST.length+'</span></div>';
+  KEYS.forEach(function(k){
+    var all=CARD_LIST.filter(function(c){ return c.s===k; });
+    var lern=all.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
+    var pct=Math.round(lern/all.length*100);
+    h+='<div class="subj-row"><div class="top2"><span>'+SUBJ[k].n+'</span><span class="muted">'+lern+' / '+all.length+'</span></div>'+
+      '<div class="bar"><i style="width:'+pct+'%;background:'+SUBJ[k].c+'"></i></div></div>';
+  });
+  h+='<p class="hint" style="margin-top:14px">«В памяти» — карточка, которую ты вспомнил(а) несколько раз подряд. Остальные ещё в работе.</p></div>';
+
+  var proofsDone=PROOFS.filter(function(p){ return st.proofs[p.id]; }).length;
+  h+='<div class="card"><div class="card-hd"><h2>Задачи и доказательства</h2><span class="muted">'+(tasksDone+proofsDone)+' из '+(TASKS.length+PROOFS.length)+'</span></div>'+
+    '<div class="subj-row"><div class="top2"><span>Задачи-ступеньки</span><span class="muted">'+tasksDone+' / '+TASKS.length+'</span></div>'+
+    '<div class="bar" style="height:8px"><i style="width:'+Math.round(tasksDone/TASKS.length*100)+'%;background:var(--accent)"></i></div></div>'+
+    '<div class="subj-row"><div class="top2"><span>Доказательства</span><span class="muted">'+proofsDone+' / '+PROOFS.length+'</span></div>'+
+    '<div class="bar" style="height:8px"><i style="width:'+Math.round(proofsDone/PROOFS.length*100)+'%;background:#7b53c7"></i></div></div>'+
+    '<p class="hint" style="margin-top:14px">Задача считается разобранной, когда пройдены все ступени. Доказательство — когда собрана вся цепочка шагов.</p></div>';
+
+  /* для родителя */
+  var week=0, cards7=0;
+  for(var j=0;j<7;j++){ var x=addDays(d,-j); week+=st.minutes[x]||0; cards7+=(st.ans&&st.ans[x])||0; }
+  var st7=st.stuck.filter(function(e){ return (new Date(e.at)).getTime() > Date.now()-7*864e5; });
+  var counts={};
+  st7.forEach(function(e){ counts[e.s]=(counts[e.s]||0)+1; });
+  var tops=Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; }).slice(0,3);
+  var topTxt=tops.length? tops.map(function(k){ return SUBJ[k].n+' ('+counts[k]+')'; }).join(', ') : 'пока нет';
+  h+='<div class="card parent"><div class="card-hd"><h2>Для родителя</h2><span class="muted">последние 7 дней</span></div>'+
+    '<div class="q"><span>Время за занятиями</span><b>'+week+' мин</b></div>'+
+    '<div class="q"><span>Повторений карточек</span><b>'+cards7+'</b></div>'+
+    '<div class="q"><span>Разобрано задач</span><b>'+tasksDone+'</b></div>'+
+    '<div class="q"><span>Собрано доказательств</span><b>'+PROOFS.filter(function(p){ return st.proofs[p.id]; }).length+' из '+PROOFS.length+'</b></div>'+
+    '<div class="q"><span>Серия дней</span><b>'+streakDays()+'</b></div>'+
+    '<div class="q"><span>Чаще застревает</span><b>'+topTxt+'</b></div>'+
+    '<p class="hint" style="margin-top:12px">«Застревает» — открывал подсказки по этим предметам. Это не оценка, а карта: где нужна помощь.</p>'+
+    '<button class="reset" id="resetAll">Сбросить весь прогресс</button></div>';
+
+  $('#progressBody').innerHTML=h;
+  $('#resetAll').addEventListener('click',function(){
+    if(confirm('Удалить серию, карточки и отметки по задачам? Домашка тоже удалится.')){
+      st=blank(); save();
+      localStorage.removeItem('uchus_hw_offset');
+      go('today'); toast('Прогресс сброшен');
+    }
+  });
+}
+
+/* ============================================================
+   Старт
+   ============================================================ */
+renderToday();
+renderStreak();
+window.addEventListener('pageshow',function(){ renderStreak(); });
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
