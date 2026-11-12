@@ -312,6 +312,12 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
         <textarea id="hwPasteText" placeholder="Алгебра: № 452, стр. 78&#10;Геометрия — § 12, вопросы 1–4&#10;13 ноября&#10;Физика: упр. 15"></textarea>
         <div class="actions"><button class="btn small" id="hwParse">Разобрать</button></div>
         <div id="hwPreview"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
+          <p class="hint" style="font-weight:600;color:var(--ink)">Взять с сайта МЭШ в один клик</p>
+          <p class="hint" style="margin-top:4px">Перетащите кнопку ниже на панель закладок браузера. Потом откройте в МЭШ страницу с домашкой и нажмите эту закладку — задания приедут сюда сами.</p>
+          <a class="btn small" id="meshBM" href="#" style="margin-top:10px">Взять из МЭШ</a>
+          <p class="hint" style="margin-top:8px">На телефоне закладки неудобны — там просто скопируйте текст из дневника и вставьте в поле выше.</p>
+        </div>
       </div>
       <div class="addhw">
         <div class="row">
@@ -997,6 +1003,7 @@ function mkDate(day,mi){
 }
 function detectDate(line){
   var s=String(line).toLowerCase().replace(/ё/g,'е').trim();
+  s=s.replace(/^(понедельник|вторник|среда|среду|четверг|пятница|пятницу|суббота|субботу|воскресенье)[,\s]+/,'');
   if(/^сегодня\b/.test(s)) return today();
   if(/^завтра\b/.test(s)) return addDays(today(),1);
   if(/^послезавтра\b/.test(s)) return addDays(today(),2);
@@ -1117,6 +1124,40 @@ $('#hwParse').addEventListener('click',function(){
   if(!txt.trim()){ $('#hwPasteText').focus(); return; }
   renderPreview(parseMesh(txt));
 });
+
+/* закладка для дневника МЭШ */
+var BM_SRC='javascript:(function(){'
++'if(location.hostname.indexOf("mos.ru")<0){alert("Откройте дневник МЭШ и нажмите эту закладку там");return;}'
++'var NL=String.fromCharCode(10);'
++'var re=/(алгебр|геометр|физик|биолог|француз|франц|англ|русск|литератур|истор|обществ|географ|информатик|[0-9]{1,2}[ ]+(январ|феврал|март|апрел|ма|июн|июл|август|сентябр|октябр|ноябр|декабр)|[0-9]{1,2}[./][0-9]{1,2})/i;'
++'var out=[],seen={},total=0,lines=document.body.innerText.split(NL);'
++'for(var i=0;i<lines.length;i++){var s=lines[i].replace(/[ ]+/g," ").trim();'
++'if(!s||s.length>160||!re.test(s))continue;if(seen[s])continue;seen[s]=1;out.push(s);total+=s.length;if(total>2400)break;}'
++'var t=out.join(NL);'
++'if(!t){alert("Не нашла на странице ни одного задания. Откройте «Домашние задания» и попробуйте ещё раз.");return;}'
++'window.open("https://nataliil.github.io/uchus/#hw="+btoa(unescape(encodeURIComponent(t))),"_blank");'
++'})();';
+$('#meshBM').setAttribute('href',BM_SRC);
+
+/* импорт по ссылке из закладки */
+function importFromHash(){
+  var h=location.hash||'';
+  if(h.indexOf('#hw=')!==0) return false;
+  var txt='';
+  try{ txt=decodeURIComponent(escape(atob(decodeURIComponent(h.slice(4))))); }catch(e){ return false; }
+  if(!txt) return false;
+  $('#hwPaste').hidden=false;
+  $('#hwPasteText').value=txt;
+  var list=parseMesh(txt);
+  renderPreview(list);
+  go('today');
+  setTimeout(function(){
+    var p=$('#hwPaste'); if(p) p.scrollIntoView({block:'center'});
+    toast(list.length? ('Нашла '+list.length+' '+plural(list.length,'задание','задания','заданий')+' — проверьте и нажмите «Добавить»') : 'Не разобрала — текст вставлен в поле, поправьте вручную');
+  },250);
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  return true;
+}
 
 function renderStuck(){
   var g=$('#stuckGrid');
@@ -1598,6 +1639,7 @@ function renderProgress(){
    ============================================================ */
 seedHwIfNeeded();
 renderToday();
+importFromHash();
 renderStreak();
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
