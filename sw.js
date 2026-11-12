@@ -1,5 +1,5 @@
 /* «Учусь» — офлайн-кэш. Версию менять при каждом обновлении index.html. */
-var CACHE = 'uchus-v5';
+var CACHE = 'uchus-v6';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -19,7 +19,7 @@ self.addEventListener('fetch', function(e){
   if(req.method !== 'GET') return;
   if(req.mode === 'navigate'){
     e.respondWith(
-      fetch(req).then(function(res){
+      fetch(req, { cache: 'no-store' }).then(function(res){
         var copy = res.clone();
         caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
         return res;
