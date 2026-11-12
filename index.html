@@ -73,6 +73,15 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .statline{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .statline span{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
   border-radius:999px;padding:5px 11px}
+.steps{list-style:none;margin:0;padding:0}
+.stp{display:grid;grid-template-columns:26px 1fr;gap:2px 12px;padding:13px 0;border-top:1px dashed var(--line)}
+.stp:first-child{border-top:0;padding-top:4px}
+.stp .n{grid-row:1;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-size:12.5px;font-weight:700;background:#efeae0;color:var(--muted)}
+.stp.done .n{background:var(--ok);color:#fff}
+.stp .tx b{display:block;font-size:15.5px;font-weight:650;line-height:1.25}
+.stp .tx span{display:block;font-size:13px;color:var(--muted);line-height:1.4;margin-top:3px}
+.stp button{grid-column:2;justify-self:start;margin-top:9px}
 
 .hw-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .hw{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);
@@ -286,13 +295,13 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M8.5 13.2l2.4 2.4L16 11"/></svg><span>Сегодня</span>
   </button>
   <button class="tab" data-view="cards">
-    <svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="13" rx="2.5"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3H19a2 2 0 0 1 2 2v9.5"/></svg><span>5 минут</span>
+    <svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="13" rx="2.5"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3H19a2 2 0 0 1 2 2v9.5"/></svg><span>Повторить</span>
   </button>
   <button class="tab" data-view="steps">
-    <svg viewBox="0 0 24 24"><path d="M4 19h5v-4h5v-4h6"/></svg><span>Ступеньки</span>
+    <svg viewBox="0 0 24 24"><path d="M4 19h5v-4h5v-4h6"/></svg><span>Помощь</span>
   </button>
   <button class="tab" data-view="progress">
-    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.3 1.1 6.1L12 17l-5.3 2.8 1.1-6.1L3.4 9.4l6-.8z"/></svg><span>Прогресс</span>
+    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.3 1.1 6.1L12 17l-5.3 2.8 1.1-6.1L3.4 9.4l6-.8z"/></svg><span>Успехи</span>
   </button>
 </nav>
 
@@ -303,7 +312,12 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
       <div class="date" id="todayDate">—</div>
       <h1 id="greet">Привет</h1>
       <p class="sub" id="todaySub">—</p>
-      <div class="statline" id="todayStats"></div>
+    </div>
+
+    <div class="card" id="planCard">
+      <div class="card-hd"><h2>Три шага на сегодня</h2><span class="muted" id="planCount">—</span></div>
+      <p class="hint" style="margin-bottom:2px">Иди сверху вниз: сначала домашка, потом пять минут. Третий шаг — только если что-то не получается.</p>
+      <ol class="steps" id="planSteps"></ol>
     </div>
 
     <div class="card">
@@ -347,28 +361,6 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-hd"><h2>Пять минут</h2><span class="muted" id="dueTxt">—</span></div>
-      <p class="hint" id="cardsHint">Карточки по всем предметам вперемешку. Ошибся — вернётся через день, а не через минуту.</p>
-      <div style="margin-top:14px"><button class="btn wide" id="startCards">Начать повторение</button></div>
-    </div>
-
-    <div class="card">
-      <div class="card-hd"><h2>Застрял?</h2></div>
-      <p class="hint">Выбери предмет — приложение будет задавать вопросы, а не выдавать ответ.</p>
-      <div class="stuck-grid" id="stuckGrid"></div>
-    </div>
-
-    <details class="card oge">
-      <summary><h2>ОГЭ: что сдавать и когда начинать</h2><span class="cv">показать</span></summary>
-      <p class="hint" style="margin-top:12px">ОГЭ сдают в 9 классе. Русский язык и математика обязательны для всех, ещё два предмета выбирают из списка: физика, химия, биология, история, география, информатика, обществознание, литература, иностранный язык.</p>
-      <p class="hint" style="margin-top:8px">Все эти предметы в приложении уже есть — в «Ступеньках» они стоят в группе «ОГЭ».</p>
-      <div class="plan">
-        <div><b>7 класс</b><span>база: алгебра, геометрия, физика и языки каждый день</span></div>
-        <div><b>8 класс</b><span>выбрать два предмета и начать по ним карточки</span></div>
-        <div><b>9 класс</b><span>интенсив: варианты ОГЭ и разбор ошибок</span></div>
-      </div>
-    </details>
   </section>
 
   <!-- КАРТОЧКИ -->
@@ -379,13 +371,12 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
   <!-- СТУПЕНЬКИ -->
   <section class="view" id="v-steps" hidden>
     <div class="card">
-      <div class="card-hd"><h2>Ступеньки</h2><span class="muted" id="stepsCount">—</span></div>
+      <div class="card-hd"><h2>Помощь</h2><span class="muted" id="stepsCount">—</span></div>
       <div class="seg" id="stepsSeg">
         <button data-mode="tasks" aria-pressed="true">Задачи</button>
         <button data-mode="proofs" aria-pressed="false">Доказательства</button>
       </div>
-      <p class="hint" style="margin-top:8px" id="stepsHint">Подсказка за подсказкой — до ответа дойдёшь сам.</p>
-      <div class="subj-chips" id="subjChips" style="margin-top:12px"></div>
+      <p class="hint" style="margin-top:8px" id="stepsHint">Подсказка за подсказкой — до ответа дойдёшь сам.</p>      <div class="subj-chips" id="subjChips" style="margin-top:12px"></div>
       <div class="tasklist" id="taskList"></div>
     </div>
   </section>
@@ -1076,20 +1067,50 @@ function renderToday(){
   var h=new Date().getHours();
   var g = h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
   $('#greet').textContent=g;
-  var plan=sessionPlan(), due=dueCards().length;
-  $('#todaySub').textContent = due>0
-    ? 'К повторению '+due+' '+plural(due,'карточка','карточки','карточек')+'. Это минуты четыре.'
-    : 'Карточки ждут. Пять минут — и свободен.';
-  $('#todayStats').innerHTML =
-    '<span>серия '+streakDays()+'</span>'+
-    '<span>карточек '+plan.length+'</span>'+
-    '<span>домашек '+(st.hw.filter(function(x){return !x.done;}).length)+'</span>';
-  $('#dueTxt').textContent = plan.length+' '+plural(plan.length,'карточка','карточки','карточек');
-  $('#startCards').textContent = plan.length? 'Начать повторение · '+plan.length : 'Начать повторение';
+  var left=st.hw.filter(function(x){return !x.done;}).length;
+  var plan=sessionPlan().length;
+  $('#todaySub').textContent = left
+    ? 'Осталось '+left+' '+plural(left,'задание','задания','заданий')+' и '+plan+' '+plural(plan,'карточка','карточки','карточек')+'.'
+    : (plan? 'Домашка закрыта. Осталось '+plan+' '+plural(plan,'карточка','карточки','карточек')+'.' : 'На сегодня всё сделано. Молодец.');
+  renderPlan();
   renderHw();
-  renderStuck();
   renderStreak();
 }
+
+function renderPlan(){
+  var d=today();
+  var open=st.hw.filter(function(x){return !x.done;});
+  var leftToday=open.filter(function(x){return x.due<=d;}).length;
+  var plan=sessionPlan().length;
+  var practiced=(st.streak.days||[]).indexOf(d)>=0;
+  var hwDone=open.length===0;
+  var steps=[
+    {n:1, t:'Домашка', done:hwDone,
+     sub: hwDone ? 'Всё отмечено — список чист.' : 'Открой список и отметь галочкой, что уже сделал. Осталось '+open.length+' '+plural(open.length,'задание','задания','заданий')+(leftToday? ', из них '+leftToday+' на сегодня':'')+'.',
+     btn:'К списку', act:'scroll'},
+    {n:2, t:'Повторить 5 минут', done:practiced,
+     sub: practiced ? 'На сегодня карточки сделаны — возвращайся завтра.' : 'Короткое повторение: '+plan+' '+plural(plan,'карточка','карточки','карточек')+'. Это четыре минуты.',
+     btn: practiced? 'Ещё подход' : 'Начать', act:'cards'},
+    {n:3, t:'Застрял на задаче?', done:false,
+     sub:'Открой помощь: приложение будет задавать вопросы, а не выдавать готовый ответ.',
+     btn:'Открыть', act:'help'}
+  ];
+  $('#planCount').textContent=((hwDone?1:0)+(practiced?1:0))+' из 2';
+  $('#planSteps').innerHTML=steps.map(function(s){
+    return '<li class="stp'+(s.done?' done':'')+'">'+
+      '<span class="n">'+(s.done?'✓':s.n)+'</span>'+
+      '<div class="tx"><b>'+s.t+'</b><span>'+s.sub+'</span></div>'+
+      '<button class="btn small'+(s.done?' ghost':'')+'" data-act="'+s.act+'">'+s.btn+'</button>'+
+    '</li>';
+  }).join('');
+}
+$('#planSteps').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-act]'); if(!b) return;
+  var a=b.dataset.act;
+  if(a==='scroll'){ var t=$('#hwBody'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); }
+  else if(a==='cards'){ startSession(); }
+  else if(a==='help'){ stepsState={mode:'tasks',subj:stepsState.subj||'alg',taskId:null,step:0,hint:false,msg:null,given:[]}; go('steps'); }
+});
 
 function seedHwIfNeeded(){
   if(st.seeded) return;
@@ -1163,10 +1184,7 @@ $('#hwBody').addEventListener('click',function(e){
   save(); renderHw(); renderToday0();
 });
 function renderToday0(){
-  $('#todayStats').innerHTML =
-    '<span>серия '+streakDays()+'</span>'+
-    '<span>карточек '+sessionPlan().length+'</span>'+
-    '<span>домашек '+st.hw.filter(function(x){return !x.done;}).length+'</span>';
+  renderPlan();
 }
 
 /* форма домашки */
@@ -1368,15 +1386,20 @@ function importFromHash(){
 
 function renderStuck(){
   var g=$('#stuckGrid');
+  if(!g) return;
   g.innerHTML=KEYS.map(function(k){
     return '<button class="stuck-b" data-subj="'+k+'"><i style="background:'+SUBJ[k].c+'"></i>'+SUBJ[k].n+'</button>';
   }).join('');
 }
-$('#stuckGrid').addEventListener('click',function(e){
-  var b=e.target.closest('.stuck-b'); if(!b) return;
-  stepsState.mode='tasks'; stepsState.subj=b.dataset.subj; stepsState.taskId=null; proofState.id=null;
-  go('steps');
-});
+(function(){
+  var g=$('#stuckGrid');
+  if(!g) return;
+  g.addEventListener('click',function(e){
+    var b=e.target.closest('.stuck-b'); if(!b) return;
+    stepsState.mode='tasks'; stepsState.subj=b.dataset.subj; stepsState.taskId=null; proofState.id=null;
+    go('steps');
+  });
+})();
 
 /* ============================================================
    Пять минут
@@ -1406,7 +1429,7 @@ function renderCardsHome(){
   var b=$('#goCards');
   if(b) b.addEventListener('click',startSession);
 }
-$('#startCards').addEventListener('click',startSession);
+$('#startCards') && $('#startCards').addEventListener('click',startSession);
 
 function startSession(){
   var plan=sessionPlan();
@@ -1803,6 +1826,15 @@ function renderProgress(){
     '<div class="subj-row"><div class="top2"><span>Доказательства</span><span class="muted">'+proofsDone+' / '+PROOFS.length+'</span></div>'+
     '<div class="bar" style="height:8px"><i style="width:'+Math.round(proofsDone/PROOFS.length*100)+'%;background:#7b53c7"></i></div></div>'+
     '<p class="hint" style="margin-top:14px">Задача считается разобранной, когда пройдены все ступени. Доказательство — когда собрана вся цепочка шагов.</p></div>';
+
+  h+='<details class="card oge"><summary><h2>ОГЭ: что сдавать и когда начинать</h2><span class="cv">показать</span></summary>'+
+    '<p class="hint" style="margin-top:12px">ОГЭ сдают в 9 классе: русский язык и математика обязательны для всех, ещё два предмета выбирают — физика, химия, биология, история, география, информатика, обществознание, литература, иностранный язык.</p>'+
+    '<p class="hint" style="margin-top:8px">Все эти предметы уже есть в приложении — в разделе «Помощь» они стоят в группе «ОГЭ».</p>'+
+    '<div class="plan">'+
+      '<div><b>7 класс</b><span>база: алгебра, геометрия, физика и языки каждый день</span></div>'+
+      '<div><b>8 класс</b><span>выбрать два предмета и начать по ним карточки</span></div>'+
+      '<div><b>9 класс</b><span>интенсив: варианты ОГЭ и разбор ошибок</span></div>'+
+    '</div></details>';
 
   /* для родителя */
   var week=0, cards7=0;
