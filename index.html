@@ -302,6 +302,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
         </div>
       </div>
       <div id="hwBody"></div>
+      <p class="hint" id="hwNote" style="margin-top:12px" hidden>Это примеры, чтобы было с чего начать. Замени своими: старые убираются крестиком, а внизу можно добавить свои или вставить список из МЭШ.</p>
       <div class="paste" id="hwPaste" hidden>
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
           <p class="hint" style="font-weight:600;color:var(--ink)">Вставить список из МЭШ</p>
@@ -719,7 +720,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -877,6 +878,20 @@ function renderToday(){
   renderStreak();
 }
 
+function seedHwIfNeeded(){
+  if(st.seeded) return;
+  var d=today(), t1=addDays(d,1), t2=addDays(d,2);
+  st.hw=[
+    {id:'seed1', s:'alg', text:'№ 448 (а, б), стр. 77 — доделать', due:d, done:false},
+    {id:'seed2', s:'alg', text:'№ 452, стр. 78 — квадрат суммы', due:t1, done:false},
+    {id:'seed3', s:'geo', text:'§ 12, вопросы 1–4; доказать признак', due:t1, done:false},
+    {id:'seed4', s:'phy', text:'упр. 15 (1, 2) — плотность', due:t1, done:false},
+    {id:'seed5', s:'en', text:'стр. 44, упр. 5 — выучить слова', due:t2, done:false},
+    {id:'seed6', s:'bio', text:'§ 24, вопрос 3 — классы позвоночных', due:t2, done:false}
+  ];
+  st.seeded=true;
+  save();
+}
 function hwGroup(h){
   var d=today();
   if(h.due<d) return 0;
@@ -892,6 +907,7 @@ function renderHw(){
   $('#hwCount').textContent = !list.length ? 'пусто' : (open.length? open.length+' в работе' : 'всё сделано');
   if(!list.length){
     box.innerHTML='<p class="hint">Пока пусто. Запиши задание сама или вставь готовый список — кнопка «Из МЭШ» выше.</p>';
+    $('#hwNote').hidden=true;
     return;
   }
   var groups=[[],[],[],[]];
@@ -910,6 +926,8 @@ function renderHw(){
     html+='</ul></div>';
   }
   box.innerHTML=html;
+  var hasSeed=st.hw.some(function(h){ return String(h.id).indexOf('seed')===0; });
+  $('#hwNote').hidden=!hasSeed;
 }
 function hwRow(h){
   var late = !h.done && h.due<today();
@@ -1568,7 +1586,7 @@ function renderProgress(){
   $('#progressBody').innerHTML=h;
   $('#resetAll').addEventListener('click',function(){
     if(confirm('Удалить серию, карточки и отметки по задачам? Домашка тоже удалится.')){
-      st=blank(); save();
+      st=blank(); st.seeded=true; save();
       localStorage.removeItem('uchus_hw_offset');
       go('today'); toast('Прогресс сброшен');
     }
@@ -1578,6 +1596,7 @@ function renderProgress(){
 /* ============================================================
    Старт
    ============================================================ */
+seedHwIfNeeded();
 renderToday();
 renderStreak();
 window.addEventListener('pageshow',function(){ renderStreak(); });
