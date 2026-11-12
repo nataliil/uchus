@@ -247,6 +247,15 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .pempty{font-size:13.5px;color:var(--muted);border:1px dashed var(--line);border-radius:11px;
   padding:16px;text-align:center;margin-top:12px}
 
+/* ---------- экран-замок ---------- */
+.lock{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.lock[hidden]{display:none}
+.lockbox{width:100%;max-width:320px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 22px;box-shadow:var(--sh)}
+.lockbox .lt{font-family:Georgia,serif;font-size:19px;font-weight:600;margin:14px 0 14px}
+.lockbox input{width:100%;text-align:center;font-size:26px;letter-spacing:.3em;border:1.5px solid var(--line);
+  border-radius:12px;padding:10px;background:#fffefb}
+.lockbox input:focus{outline:none;border-color:var(--accent)}
+
 /* ---------- прогресс ---------- */
 .week{display:flex;gap:6px;justify-content:space-between;margin-top:6px}
 .wd{flex:1;text-align:center}
@@ -396,6 +405,17 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <div id="progressBody"></div>
   </section>
 </main>
+
+<div class="lock" id="lock" hidden>
+  <div class="lockbox">
+    <div class="mark" style="margin:0 auto">У</div>
+    <p class="lt" id="lockTitle">Введи код</p>
+    <input id="lockPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="····">
+    <button class="btn wide" id="lockGo" style="margin-top:12px">Открыть</button>
+    <p class="hint" id="lockMsg" style="margin-top:10px">Четыре цифры, которые ты задал сам</p>
+    <button class="reset" id="lockReset" style="margin-top:14px">Забыл код — сбросить</button>
+  </div>
+</div>
 
 <div class="toast" id="toast" hidden></div>
 
@@ -927,7 +947,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -1003,6 +1023,11 @@ function subjBar(k){
     '<span class="muted">'+lern+' / '+all.length+'</span></div>'+
     '<div class="bar"><i style="width:'+Math.round(lern/all.length*100)+'%;background:'+SUBJ[k].c+'"></i></div></div>';
 }
+function pinHash(p){
+  var h=5381;
+  for(var i=0;i<p.length;i++){ h=((h<<5)+h)^p.charCodeAt(i); }
+  return (h>>>0).toString(16);
+}
 var toastT=null;
 function toast(msg){
   var t=$('#toast'); t.textContent=msg; t.hidden=false;
@@ -1076,7 +1101,7 @@ function renderToday(){
   $('#todayDate').textContent=fullDate(d);
   var h=new Date().getHours();
   var g = h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
-  $('#greet').textContent=g;
+  $('#greet').textContent = (st.profile && st.profile.name) ? (g+', '+st.profile.name) : g;
   var left=st.hw.filter(function(x){return !x.done;}).length;
   var plan=sessionPlan().length;
   $('#todaySub').textContent = left
@@ -1830,6 +1855,22 @@ function renderProgress(){
   var tasksDone=TASKS.filter(function(t){ return st.tasks[t.id]; }).length;
   var h='';
 
+  h+='<div class="card"><div class="card-hd"><h2>Кабинет ученика</h2><span class="muted">'+(st.profile.pin?'под кодом':'без кода')+'</span></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<input class="cinput" id="profName" style="margin-top:0;flex:1 1 130px" placeholder="Имя" value="'+esc(st.profile.name||'')+'" autocomplete="off">'+
+      '<input class="cinput" id="profClass" style="margin-top:0;flex:0 0 88px" placeholder="Класс" value="'+esc(st.profile.cls||'')+'" autocomplete="off">'+
+      '<button class="btn small" id="profSave">Сохранить</button>'+
+    '</div>'+
+    '<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">'+
+      '<label class="hint" style="display:flex;align-items:center;gap:9px;cursor:pointer">'+
+        '<input type="checkbox" id="profLock" '+(st.profile.pin?'checked':'')+'> Запирать приложение кодом</label>'+
+      '<div id="pinBox" '+(st.profile.pin?'':'hidden')+' style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
+        '<input class="cinput" id="profPin" style="margin-top:0;flex:1 1 110px;letter-spacing:.2em" inputmode="numeric" maxlength="4" placeholder="4 цифры">'+
+        '<button class="btn small" id="pinSave">Задать код</button>'+
+      '</div>'+
+      '<p class="hint" style="margin-top:10px">Данные ученика хранятся только на этом устройстве — никуда не отправляются, и в МЭШ приложение не входит. Код — замок от случайных глаз, а не шифрование.</p>'+
+    '</div></div>';
+
   h+='<div class="card"><div class="card-hd"><h2>Серия</h2><span class="muted">'+streakDays()+' '+plural(streakDays(),'день','дня','дней')+'</span></div>'+
     '<div class="week">';
   for(var i=0;i<7;i++){
@@ -1881,6 +1922,23 @@ function renderProgress(){
     '<button class="reset" id="resetAll">Сбросить весь прогресс</button></div>';
 
   $('#progressBody').innerHTML=h;
+  var pn=$('#profName'), pc=$('#profClass');
+  if(pn) pn.addEventListener('keydown',function(e){ if(e.key==='Enter') pc.focus(); });
+  if(pc) pc.addEventListener('keydown',function(e){ if(e.key==='Enter') $('#profSave').click(); });
+  if($('#profSave')) $('#profSave').addEventListener('click',function(){
+    st.profile.name=($('#profName').value||'').trim();
+    st.profile.cls=($('#profClass').value||'').trim();
+    save(); renderToday(); renderProgress(); toast('Сохранено');
+  });
+  if($('#profLock')) $('#profLock').addEventListener('change',function(){
+    if(this.checked){ $('#pinBox').hidden=false; $('#profPin').focus(); }
+    else{ st.profile.pin=''; save(); renderProgress(); toast('Код снят'); }
+  });
+  if($('#pinSave')) $('#pinSave').addEventListener('click',function(){
+    var v=($('#profPin').value||'').replace(/\D/g,'');
+    if(v.length!==4){ toast('Нужно ровно четыре цифры'); $('#profPin').focus(); return; }
+    st.profile.pin=pinHash(v); save(); renderProgress(); toast('Код задан — теперь при входе спросит');
+  });
   $('#resetAll').addEventListener('click',function(){
     if(confirm('Удалить серию, карточки и отметки по задачам? Домашка тоже удалится.')){
       st=blank(); st.seeded=true; save();
@@ -1893,10 +1951,50 @@ function renderProgress(){
 /* ============================================================
    Старт
    ============================================================ */
+/* ---------- экран-замок ---------- */
+var lockTries=0, lockBlocked=false;
+function showLock(){
+  if(!st.profile || !st.profile.pin) return;
+  $('#lock').hidden=false;
+  setTimeout(function(){ var i=$('#lockPin'); if(i) i.focus(); },150);
+}
+function tryUnlock(){
+  if(lockBlocked) return;
+  var v=($('#lockPin').value||'').replace(/\D/g,'');
+  if(v.length!==4){ $('#lockMsg').textContent='Нужно четыре цифры'; return; }
+  if(pinHash(v)===st.profile.pin){
+    $('#lock').hidden=true; $('#lockPin').value=''; $('#lockMsg').textContent='';
+  }else{
+    lockTries++;
+    $('#lockPin').value='';
+    if(lockTries>=5){
+      lockBlocked=true;
+      var left=30;
+      $('#lockGo').disabled=true;
+      $('#lockMsg').textContent='Слишком много попыток. Подожди 30 секунд.';
+      var t=setInterval(function(){
+        left--;
+        $('#lockMsg').textContent='Подожди ещё '+left+' с';
+        if(left<=0){ clearInterval(t); lockBlocked=false; lockTries=0; $('#lockGo').disabled=false; $('#lockMsg').textContent='Попробуй ещё раз'; }
+      },1000);
+    }else{
+      $('#lockMsg').textContent='Не подходит. Осталось попыток: '+(5-lockTries);
+    }
+  }
+}
+$('#lockGo').addEventListener('click',tryUnlock);
+$('#lockPin').addEventListener('keydown',function(e){ if(e.key==='Enter') tryUnlock(); });
+$('#lockReset').addEventListener('click',function(){
+  if(confirm('Сбросить код? Домашка и карточки останутся, но приложение больше не будет запираться.')){
+    st.profile.pin=''; save(); $('#lock').hidden=true; toast('Код сброшен');
+  }
+});
+
 seedHwIfNeeded();
 renderToday();
 importFromHash();
 renderStreak();
+showLock();
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
 if('serviceWorker' in navigator && location.protocol==='https:'){
