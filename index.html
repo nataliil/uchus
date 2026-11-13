@@ -43,7 +43,7 @@ input,select{font:inherit;color:inherit}
 .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 
 /* ---------- навигация ---------- */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);
   gap:2px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));
   background:rgba(255,253,248,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;border-radius:12px;
@@ -177,6 +177,25 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .chsep{align-self:center;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
   font-weight:700;padding:0 4px 0 10px;border-left:1px solid var(--line);white-space:nowrap}
 .gh{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 2px}
+.grid-5{grid-template-columns:repeat(5,auto)}
+.unit{border-top:1px solid var(--line)}
+.unit:first-of-type{border-top:0}
+.unit>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:12px 0;font-size:15px;font-weight:650}
+.unit>summary::-webkit-details-marker{display:none}
+.unit>summary .n{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.unit[open]>summary{color:var(--accent-ink)}
+.u-body{padding:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.u-body b{color:var(--ink);font-weight:700;display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:10px 0 3px}
+.u-body ul{margin:0;padding-left:18px}
+.qa{margin-top:6px;border:1px solid var(--line);border-radius:9px;background:#fffefb}
+.qa>summary{list-style:none;cursor:pointer;padding:8px 10px;font-size:13.5px;color:var(--ink)}
+.qa>summary::-webkit-details-marker{display:none}
+.qa>div{padding:0 10px 9px;font-size:13.5px;color:var(--accent-ink)}
+.brow{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.brow:first-of-type{border-top:0}
+.brow b{flex:0 0 108px;font-size:13.5px;font-weight:650}
+.brow input{flex:1 1 120px;border:1px solid var(--line);background:#fffefb;border-radius:9px;padding:7px 9px;font-size:13.5px;min-width:0}
+.brow input:focus{outline:none;border-color:var(--accent)}
 .oge summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .oge summary::-webkit-details-marker{display:none}
 .oge summary h2{font-size:19px}
@@ -284,7 +303,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
   body{padding-bottom:40px}
   .top{padding-left:0;padding-right:0;max-width:920px;margin:0 auto}
   main{padding:0 0 40px}
-  .tabs{position:static;grid-template-columns:repeat(4,auto);justify-content:center;gap:6px;
+  .tabs{position:static;grid-template-columns:repeat(5,auto);justify-content:center;gap:6px;
     background:none;border:0;backdrop-filter:none;padding:8px 0 14px;max-width:920px;margin:0 auto}
   .tab{flex-direction:row;gap:8px;font-size:14px;padding:9px 16px;border-radius:999px}
   .tab svg{width:18px;height:18px}
@@ -312,6 +331,9 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
   </button>
   <button class="tab" data-view="steps">
     <svg viewBox="0 0 24 24"><path d="M4 19h5v-4h5v-4h6"/></svg><span>Помощь</span>
+  </button>
+  <button class="tab" data-view="books">
+    <svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M13 4h5.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H13z"/></svg><span>Учебники</span>
   </button>
   <button class="tab" data-view="progress">
     <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.3 1.1 6.1L12 17l-5.3 2.8 1.1-6.1L3.4 9.4l6-.8z"/></svg><span>Успехи</span>
@@ -398,6 +420,11 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
       <p class="hint" style="margin-top:8px" id="stepsHint">Подсказка за подсказкой — до ответа дойдёшь сам.</p>      <div class="subj-chips" id="subjChips" style="margin-top:12px"></div>
       <div class="tasklist" id="taskList"></div>
     </div>
+  </section>
+
+  <!-- УЧЕБНИК -->
+  <section class="view" id="v-books" hidden>
+    <div id="booksBody"></div>
   </section>
 
   <!-- ПРОГРЕСС -->
@@ -961,7 +988,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -1058,13 +1085,14 @@ function go(v){
     if(b.dataset.view===v) b.setAttribute('aria-current','page');
     else b.removeAttribute('aria-current');
   });
-  ['today','cards','steps','progress'].forEach(function(k){
+  ['today','cards','steps','books','progress'].forEach(function(k){
     $('#v-'+k).hidden = (k!==v);
   });
   window.scrollTo({top:0,behavior:'instant'});
   if(v==='today') renderToday();
   if(v==='cards') renderCardsHome();
   if(v==='steps') renderSteps();
+  if(v==='books') renderBooks();
   if(v==='progress') renderProgress();
 }
 $('#tabs').addEventListener('click',function(e){
@@ -1862,6 +1890,90 @@ function bindStep(t){
 /* ============================================================
    Прогресс
    ============================================================ */
+/* ============================================================
+   Учебник и программа
+   ============================================================ */
+var BOOK_LIT = {
+  title:'Литература. 7 класс. В 2 частях',
+  authors:'В.Я. Коровина, В.П. Журавлёв, В.И. Коровин',
+  pub:'Просвещение',
+  units:[
+    {t:'Былины', read:'«Вольга и Микула Селянинович», «Садко» и статью о былинах в начале раздела.',
+     ask:['Что такое былина и чем она отличается от сказки','Кто такой Микула и почему Вольга ему уступает','Где в былине гипербола'],
+     check:[{q:'Кого не может догнать дружина Вольги?',a:'Пахаря Микулу Селяниновича'},
+            {q:'Что такое гипербола?',a:'Художественное преувеличение'}]},
+    {t:'Древнерусская литература', read:'«Повесть о Петре и Февронии Муромских» целиком.',
+     ask:['Почему это житие, а не сказка','Почему Феврония просит взять с собой только мужа','Чему учит повесть'],
+     check:[{q:'Кто вылечил князя Петра?',a:'Феврония, крестьянка из села Ласково'},
+            {q:'Что произошло после их смерти?',a:'Их нашли в одном гробе, хотя положили в разные'}]},
+    {t:'Ломоносов и Державин', read:'«Ода на день восшествия…», «К статуе Петра Великого», «Властителям и судиям», «Признание».',
+     ask:['Что такое ода','Кого и за что прославляет Ломоносов','Против чего выступает Державин'],
+     check:[{q:'Что такое ода?',a:'Торжественное стихотворение в честь лица или события'},
+            {q:'Кого прославляет Ломоносов в оде?',a:'Елизавету Петровну и Петра I'}]},
+    {t:'Фонвизин, «Недоросль»', read:'Комедию целиком, все пять действий.',
+     ask:['Кто такой недоросль','Почему комедия так называется','Кто виноват в невежестве Митрофана','В чём смысл финала'],
+     check:[{q:'Что значит слово «недоросль»?',a:'Дворянский сын, не поступивший на службу'},
+            {q:'Почему учителя ничему не научили Митрофана?',a:'Они сами невежественны, а учиться он не хочет'}]},
+    {t:'А.С. Пушкин', read:'«Песнь о вещем Олеге», «Станционный смотритель», «Борис Годунов» (сцена в Чудовом монастыре).',
+     ask:['Почему Олег погибает от своего коня','Кто виноват в смерти смотрителя','Почему Вырин — «маленький человек»'],
+     check:[{q:'От чего погиб Олег?',a:'Его ужалила змея, выползшая из черепа коня'},
+            {q:'Кто увёз Дуню?',a:'Ротмистр Минский'}]},
+    {t:'М.Ю. Лермонтов', read:'«Песня про царя Ивана Васильевича, молодого опричника и удалого купца Калашникова».',
+     ask:['Почему произведение названо песней','За что Калашников выходит на бой','Почему царь казнит Калашникова'],
+     check:[{q:'Кто обесчестил жену Калашникова?',a:'Опричник Кирибеевич'},
+            {q:'О чём Калашников просит царя перед казнью?',a:'Позаботиться о его семье'}]},
+    {t:'Н.В. Гоголь, «Тарас Бульба»', read:'Повесть целиком, главы I–XII.',
+     ask:['Что такое товарищество для Тараса','Почему Андрий предаёт','Как погибает Тарас'],
+     check:[{q:'За что на Сечи привязывали к позорному столбу?',a:'За воровство, даже мелкое'},
+            {q:'Как казнили за убийство?',a:'Закапывали живого вместе с гробом убитого'}]},
+    {t:'Тургенев и Чехов', read:'«Бирюк», стихотворения в прозе, «Хамелеон», «Злоумышленник».',
+     ask:['Почему Бирюк отпускает мужика','Что такое хамелеонство','Почему рассказ назван «Злоумышленник»'],
+     check:[{q:'От чего зависит мнение Очумелова в «Хамелеоне»?',a:'От того, чья собака'},
+            {q:'Какие слова Тургенева о русском языке надо знать?',a:'«Великий, могучий, правдивый и свободный»'}]},
+    {t:'О. Генри, «Дары волхвов»', read:'Рассказ целиком.',
+     ask:['В чём главная мысль рассказа','Почему подарки оказались бесполезны'],
+     check:[{q:'Что продала Делла ради подарка?',a:'Свои волосы'},
+            {q:'Что продал Джим?',a:'Свои часы'}]}
+  ]
+};
+function unitHtml(u,i){
+  return '<details class="unit"><summary>'+esc(u.t)+'<span class="n">'+(i+1)+'</span></summary>'+
+    '<div class="u-body">'+
+      '<b>Что прочитать</b>'+esc(u.read)+
+      '<b>Что спросят</b><ul>'+u.ask.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'+
+      '<b>Проверь себя</b>'+u.check.map(function(c){
+        return '<details class="qa"><summary>'+esc(c.q)+'</summary><div>'+esc(c.a)+'</div></details>';
+      }).join('')+
+    '</div></details>';
+}
+function renderBooks(){
+  var h='';
+  h+='<div class="card"><div class="card-hd"><h2>Учебник и программа</h2></div>'+
+    '<p class="hint">Открой тему — увидишь три вещи: что прочитать, что спросят на уроке и вопросы для самопроверки.</p></div>';
+  h+='<div class="card"><div class="card-hd"><h2>Литература</h2><span class="muted">7 класс</span></div>'+
+    '<p class="hint" style="font-weight:650;color:var(--ink);margin-bottom:2px">'+esc(BOOK_LIT.authors)+'</p>'+
+    '<p class="hint">'+esc(BOOK_LIT.title)+' · '+esc(BOOK_LIT.pub)+'</p>'+
+    '<div style="margin-top:10px">'+BOOK_LIT.units.map(unitHtml).join('')+'</div></div>';
+  var others=KEYS.filter(function(k){ return k!=='lit'; });
+  h+='<div class="card"><div class="card-hd"><h2>Другие предметы</h2><span class="muted">нужен автор</span></div>'+
+    '<p class="hint">Впиши автора учебника — добавлю такую же программу: темы, что спросят и вопросы для проверки.</p>'+
+    others.map(function(k){
+      var v=(st.books && st.books[k])||'';
+      return '<div class="brow"><b>'+SUBJ[k].n+'</b>'+
+        '<input id="bk-'+k+'" placeholder="Автор, например Макарычев" value="'+esc(v)+'" autocomplete="off">'+
+        '<button class="btn small" data-bk="'+k+'">Ок</button></div>';
+    }).join('')+'</div>';
+  $('#booksBody').innerHTML=h;
+  $$('#booksBody button[data-bk]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.bk, v=($('#bk-'+k).value||'').trim();
+      if(!st.books) st.books={};
+      st.books[k]=v; save();
+      toast(v? 'Записала: '+v : 'Убрала');
+    });
+  });
+}
+
 function renderProgress(){
   var d=today();
   var learned=CARD_LIST.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
