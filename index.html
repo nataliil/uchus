@@ -172,10 +172,13 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .dots i.on{background:var(--accent)}
 
 /* ---------- ступеньки ---------- */
-.subj-chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
-.subj-chips::-webkit-scrollbar{display:none}
-.chsep{align-self:center;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
-  font-weight:700;padding:0 4px 0 10px;border-left:1px solid var(--line);white-space:nowrap}
+.subj-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:2px 0 2px;overflow:visible}
+.schip{flex:none;border:1px solid var(--line);background:#fffefb;border-radius:999px;padding:6px 11px;
+  font-size:12.5px;font-weight:600;line-height:1.25;white-space:nowrap;color:var(--muted)}
+.schip[aria-pressed="true"]{border-color:transparent;color:#fff;box-shadow:0 4px 10px -6px rgba(0,0,0,.35)}
+.chsep{flex-basis:100%;display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.07em;
+  text-transform:uppercase;color:#9a9388;font-weight:700;padding:6px 0 0;margin:0}
+.chsep:after{content:'';flex:1;height:1px;background:var(--line)}
 .gh{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 2px}
 .grid-5{grid-template-columns:repeat(5,auto)}
 .unit{border-top:1px solid var(--line)}
@@ -1750,7 +1753,7 @@ function renderSteps(){
     return '<button class="schip" data-subj="'+k+'" aria-pressed="'+(on?'true':'false')+'"'+
       (on?' style="background:'+SUBJ[k].c+'"':'')+'>'+SUBJ[k].n+'</button>';
   };
-  chips.innerHTML = SCHOOL_KEYS.map(chip).join('')+'<span class="chsep">+ ОГЭ</span>'+OGE_KEYS.map(chip).join('');
+  chips.innerHTML = SCHOOL_KEYS.map(chip).join('')+'<span class="chsep">Предметы ОГЭ</span>'+OGE_KEYS.map(chip).join('');
   var list=TASKS.filter(function(t){ return t.s===stepsState.subj; });
   var doneCount=TASKS.filter(function(t){ return st.tasks[t.id]; }).length;
   $('#stepsCount').textContent=doneCount+' из '+TASKS.length;
