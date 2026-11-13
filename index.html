@@ -250,6 +250,15 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
   font-size:8.5px;font-weight:700;letter-spacing:.03em;padding:2px 5px;border-radius:4px;text-transform:uppercase}
 .covrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .covrow .btn{flex:0 0 auto}
+.reader{position:fixed;inset:0;z-index:210;background:#fff;display:flex;flex-direction:column}
+.reader[hidden]{display:none}
+.reader .rhead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);
+  background:var(--surface);font-weight:650;font-size:14px}
+.reader .rhead b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reader .rhead button{border:1px solid var(--line);background:#fffefb;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:650}
+.reader iframe{flex:1;width:100%;border:0;background:#f3f1ec}
+.reader .rhint{padding:6px 14px;font-size:12px;color:var(--muted);background:#fbf9f3;border-bottom:1px solid var(--line)}
+
 .askrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .askrow input{flex:1 1 200px;border:1.5px solid var(--line);background:#fffefb;border-radius:11px;
   padding:11px 12px;font-size:15px;min-width:0}
@@ -517,6 +526,16 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <p class="hint" id="lockMsg" style="margin-top:10px">Четыре цифры, которые ты задал сам</p>
     <button class="reset" id="lockReset" style="margin-top:14px">Забыл код — сбросить</button>
   </div>
+</div>
+
+<div class="reader" id="reader" hidden>
+  <div class="rhead"><b id="readerName">Учебник</b>
+    <button id="readerTab">В новой вкладке</button>
+    <button id="readerNew">Другой файл</button>
+    <button id="readerClose">Закрыть ✕</button>
+  </div>
+  <div class="rhint" id="readerHint">Файл хранится только на этом устройстве</div>
+  <iframe id="readerFrame" title="Учебник"></iframe>
 </div>
 
 <div class="toast" id="toast" hidden></div>
@@ -2277,6 +2296,16 @@ var BOOKS=[BOOK_LIT, BOOK_RUS, BOOK_GEO];
 BOOK_LIT.key='lit'; BOOK_LIT.name='Литература'; BOOK_LIT.cls='7 класс';
 
 var booksState={level:'shelf', book:null};
+var pdfState={};
+function loadPdfs(){
+  BOOKS.forEach(function(B){
+    idbGet(B.key).then(function(blob){
+      if(!blob) return;
+      pdfState[B.key]=blob;
+      if(booksState.level==='book' && booksState.book===B.key) renderBook(B.key);
+    }).catch(function(){});
+  });
+}
 
 function bookOfUnit(id){
   for(var i=0;i<BOOKS.length;i++){
@@ -2473,11 +2502,70 @@ function renderMine(){
   });
 }
 
+var idbP=null, readerURL=null;
+function idbOpen(){
+  if(idbP) return idbP;
+  idbP=new Promise(function(res,rej){
+    try{
+      var r=indexedDB.open('uchus_pdf',1);
+      r.onupgradeneeded=function(){ r.result.createObjectStore('pdf'); };
+      r.onsuccess=function(){ res(r.result); };
+      r.onerror=function(){ rej(r.error); };
+    }catch(e){ rej(e); }
+  });
+  return idbP;
+}
+function idbPut(k,v){
+  return idbOpen().then(function(db){
+    return new Promise(function(res,rej){
+      var tx=db.transaction('pdf','readwrite');
+      tx.objectStore('pdf').put(v,k);
+      tx.oncomplete=function(){ res(); };
+      tx.onerror=function(){ rej(tx.error); };
+    });
+  });
+}
+function idbGet(k){
+  return idbOpen().then(function(db){
+    return new Promise(function(res,rej){
+      var tx=db.transaction('pdf','readonly');
+      var rq=tx.objectStore('pdf').get(k);
+      rq.onsuccess=function(){ res(rq.result||null); };
+      rq.onerror=function(){ rej(rq.error); };
+    });
+  });
+}
+function idbDel(k){
+  return idbOpen().then(function(db){
+    return new Promise(function(res){
+      var tx=db.transaction('pdf','readwrite');
+      tx.objectStore('pdf').delete(k);
+      tx.oncomplete=function(){ res(); };
+    });
+  });
+}
+function openReader(B, blob){
+  if(readerURL){ URL.revokeObjectURL(readerURL); readerURL=null; }
+  readerURL=URL.createObjectURL(blob);
+  $('#readerName').textContent=B.name+' — '+(B.cls||'');
+  $('#readerFrame').src=readerURL;
+  $('#readerHint').textContent='Файл хранится только на этом устройстве. Размер: '+Math.round(blob.size/1024/1024*10)/10+' МБ';
+  $('#reader').hidden=false;
+}
+function closeReader(){
+  $('#reader').hidden=true;
+  $('#readerFrame').src='about:blank';
+  if(readerURL){ URL.revokeObjectURL(readerURL); readerURL=null; }
+}
+$('#readerClose').addEventListener('click',closeReader);
+$('#readerTab').addEventListener('click',function(){ if(readerURL) window.open(readerURL,'_blank'); });
+
 function renderBook(key){
   var B=bookByKey(key);
   if(!B){ booksState.level='shelf'; renderBooks(); return; }
   var done=(st.units||{});
   var passed=B.units.filter(function(u){ var d=done[u.id]; return d && d.right>=Math.ceil(u.quiz.length*0.6); }).length;
+  var pdfHere=(typeof pdfState!=='undefined') && pdfState[B.key];
   var h='<button class="back" id="bback">‹ все учебники</button>'+
     '<div class="card" style="margin-top:8px">'+
       '<div class="bhead">'+coverHtml(B)+
@@ -2488,9 +2576,12 @@ function renderBook(key){
         '</div>'+
       '</div>'+
       '<div class="covrow">'+
+        '<button class="btn small" id="pdfBtn">'+(pdfHere ? 'Открыть учебник' : 'Добавить PDF учебника')+'</button>'+
+        (pdfHere? '<button class="btn small ghost" id="pdfChange">Другой файл</button>':'')+
         '<button class="btn small ghost" id="coverBtn">'+(st.covers && st.covers[B.key] ? 'Заменить обложку' : 'Фото обложки')+'</button>'+
         '<button class="btn small ghost" id="usedBtn">'+(st.used && st.used[B.key]===false ? 'Отметить как «использую»' : 'Этот учебник не используется')+'</button>'+
         '<input type="file" id="coverFile" accept="image/*" hidden>'+
+        '<input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden>'+
       '</div>'+
       '<div style="margin-top:14px">'+B.units.map(function(u,i){ return unitCard(u,i,done); }).join('')+'</div>'+
     '</div>';
@@ -2518,6 +2609,33 @@ function renderBook(key){
       fr.readAsDataURL(f);
     });
   }
+  var pb=$('#pdfBtn');
+  if(pb){
+    pb.addEventListener('click',function(){
+      if(pdfState[B.key]){ openReader(B, pdfState[B.key]); return; }
+      $('#pdfFile').click();
+    });
+    var pc=$('#pdfChange');
+    if(pc) pc.addEventListener('click',function(){ $('#pdfFile').click(); });
+    $('#pdfFile').addEventListener('change',function(e){
+      var f=e.target.files && e.target.files[0];
+      if(!f) return;
+      if(f.type && f.type.indexOf('pdf')<0 && !/\.pdf$/i.test(f.name||'')){
+        toast('Нужен файл PDF'); return;
+      }
+      if(!st.pdfNames) st.pdfNames={};
+      st.pdfNames[B.key]=f.name||'учебник.pdf';
+      save();
+      idbPut(B.key,f).then(function(){
+        pdfState[B.key]=f;
+        toast('Учебник добавлен');
+        renderBook(B.key);
+      }).catch(function(){ toast('Не удалось сохранить файл — возможно, он слишком большой'); });
+    });
+  }
+  var rn=$('#readerNew');
+  if(rn) rn.addEventListener('click',function(){ $('#pdfFile').click(); });
+
   var ub=$('#usedBtn');
   if(ub){
     ub.addEventListener('click',function(){
@@ -2728,6 +2846,7 @@ $('#lockReset').addEventListener('click',function(){
 
 seedHwIfNeeded();
 renderToday();
+loadPdfs();
 importFromHash();
 renderStreak();
 showLock();
