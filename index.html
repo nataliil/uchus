@@ -240,6 +240,16 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .binfo{min-width:0}
 .binfo h3{font-size:18px;margin:0 0 5px}
 .binfo .hint{font-size:12.5px;line-height:1.4}
+.cover.img{background:#e9e6df;padding:0}
+.cover.img img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .tag{position:absolute;left:7px;right:7px;bottom:7px;background:rgba(255,253,248,.94);
+  color:#221f1b;font-size:9px;line-height:1.25;font-weight:700;border-radius:5px;padding:3px 4px;
+  text-align:center;font-style:normal;letter-spacing:.01em}
+.shelf .unused{opacity:.55}
+.shelf .badge{position:absolute;top:7px;left:7px;background:rgba(34,31,27,.72);color:#fff;
+  font-size:8.5px;font-weight:700;letter-spacing:.03em;padding:2px 5px;border-radius:4px;text-transform:uppercase}
+.covrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.covrow .btn{flex:0 0 auto}
 .askrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .askrow input{flex:1 1 200px;border:1.5px solid var(--line);background:#fffefb;border-radius:11px;
   padding:11px 12px;font-size:15px;min-width:0}
@@ -1053,7 +1063,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -2298,12 +2308,26 @@ function unitCard(u,i,done){
     '<span class="arrow">›</span></button>';
 }
 
+function ownerTag(){
+  var n=(st.profile && st.profile.name)||'';
+  var c=(st.profile && st.profile.cls)||'';
+  if(!n) return 'Мой учебник';
+  return n+(c? ' · '+c : '');
+}
 function coverHtml(B){
+  var photo=(st.covers && st.covers[B.key])||'';
+  var used=(st.used && st.used[B.key]===false) ? false : true;
+  if(photo){
+    return '<span class="cover img"><img src="'+photo+'" alt="'+esc(B.name)+'">'+
+      '<em class="tag">'+esc(ownerTag())+'</em>'+
+      (used?'':'<span class="badge">не используется</span>')+'</span>';
+  }
   var short = B.key==='lit' ? ['ЛИТЕРАТУРА'] : (B.key==='rus' ? ['РУССКИЙ','ЯЗЫК'] : ['ГЕОМЕТРИЯ']);
   return '<span class="cover cover-'+B.key+'">'+
       '<span class="cv-top">'+esc(short[0])+(short[1]?'<br>'+short[1]:'')+'</span>'+
       '<span class="cv-cls">'+(B.key==='geo'?'7–9':'7')+'</span>'+
-    '</span>';
+      '<em class="tag">'+esc(ownerTag())+'</em>'+
+      (used?'':'<span class="badge">не используется</span>')+'</span>';
 }
 
 function renderBooks(){
@@ -2315,7 +2339,8 @@ function renderBooks(){
   h+='<div class="card"><div class="card-hd"><h2>Учебники</h2><span class="muted">'+BOOKS.length+' книги</span></div>'+
     '<p class="hint">Это не книги целиком, а рабочий разбор: правило, примеры и вопросы — по тому же порядку, что в учебнике. Открывайте тему перед уроком или когда сели за домашку.</p>'+
     '<div class="shelf">'+BOOKS.map(function(B){
-      return '<button data-book="'+B.key+'">'+coverHtml(B)+
+      var unused=(st.used && st.used[B.key]===false);
+      return '<button data-book="'+B.key+'"'+(unused?' class="unused"':'')+'>'+coverHtml(B)+
         '<span class="t">'+esc(B.name)+'</span>'+
         '<span class="a">'+esc(B.authors.split(',')[0])+' · '+B.units.length+' тем</span></button>';
     }).join('')+'</div></div>';
@@ -2462,10 +2487,46 @@ function renderBook(key){
           '<p class="hint" style="margin-top:6px;color:var(--accent-ink);font-weight:600">Пройдено тем: '+passed+' из '+B.units.length+'</p>'+
         '</div>'+
       '</div>'+
+      '<div class="covrow">'+
+        '<button class="btn small ghost" id="coverBtn">'+(st.covers && st.covers[B.key] ? 'Заменить обложку' : 'Фото обложки')+'</button>'+
+        '<button class="btn small ghost" id="usedBtn">'+(st.used && st.used[B.key]===false ? 'Отметить как «использую»' : 'Этот учебник не используется')+'</button>'+
+        '<input type="file" id="coverFile" accept="image/*" hidden>'+
+      '</div>'+
       '<div style="margin-top:14px">'+B.units.map(function(u,i){ return unitCard(u,i,done); }).join('')+'</div>'+
     '</div>';
   $('#booksBody').innerHTML=h;
   $('#bback').addEventListener('click',function(){ booksState.level='shelf'; booksState.book=null; renderBooks(); });
+  var cb=$('#coverBtn');
+  if(cb){
+    cb.addEventListener('click',function(){ $('#coverFile').click(); });
+    $('#coverFile').addEventListener('change',function(e){
+      var f=e.target.files && e.target.files[0];
+      if(!f) return;
+      var fr=new FileReader();
+      fr.onload=function(){
+        var img=new Image();
+        img.onload=function(){
+          var W=400, H=Math.round(W*img.height/img.width);
+          var c=document.createElement('canvas'); c.width=W; c.height=H;
+          c.getContext('2d').drawImage(img,0,0,W,H);
+          if(!st.covers) st.covers={};
+          st.covers[B.key]=c.toDataURL('image/jpeg',0.7);
+          save(); renderBook(B.key); toast('Обложка обновлена');
+        };
+        img.src=fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+  }
+  var ub=$('#usedBtn');
+  if(ub){
+    ub.addEventListener('click',function(){
+      if(!st.used) st.used={};
+      st.used[B.key]= (st.used[B.key]===false) ? true : false;
+      save(); renderBook(B.key);
+      toast(st.used[B.key]? 'Отмечен как используемый' : 'Отмечен как неиспользуемый');
+    });
+  }
   $$('#booksBody .ucard').forEach(function(b){
     b.addEventListener('click',function(){ booksState.level='unit'; booksState.unit=b.dataset.unit; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
   });
