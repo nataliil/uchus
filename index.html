@@ -211,6 +211,8 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .uline{margin:4px 0 0;padding:0;list-style:none}
 .uline li{position:relative;padding-left:15px;font-size:13.5px;line-height:1.5;color:var(--muted);margin-top:6px}
 .uline li:before{content:'—';position:absolute;left:0;color:#c3bcae}
+.uline.ex li{color:#3d5a50}
+.uline.ex li:before{content:'•';color:var(--accent)}
 .opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fffefb;
   border-radius:10px;padding:9px 11px;font-size:13.5px;line-height:1.35;margin-top:6px}
 .opt.ok{border-color:#b6dfc6;background:#e9f7ef;color:#1f7a4d;font-weight:650}
@@ -2123,6 +2125,19 @@ var BOOK_RUS = {
   ]
 };
 
+var RUS_EX={
+  'rus-1':['Научный: «Вода закипает при 100 °C»','Художественный: «Река спала подо льдом»','Разговорный: «Ну ты и даёшь!»'],
+  'rus-2':['Книга, прочитанная мной, лежала на столе — оборот после слова, две запятые','Прочитанная мной книга лежала на столе — оборот перед словом, запятых нет','Не прочитанная мной книга — есть зависимое слово, НЕ раздельно'],
+  'rus-3':['жареная картошка — одна Н','жаренная на масле картошка — две Н, появилось зависимое слово','решённая задача — две Н, глагол совершенного вида','задача решена — одна Н, это краткое причастие'],
+  'rus-4':['Он шёл, не оглядываясь. — оборот всегда в запятых','Прочитав книгу, он задумался. — запятая после оборота в начале','Не спеша — НЕ с деепричастием раздельно'],
+  'rus-5':['горячо — под ударением О','певуче — без ударения Е','по-своему — приставка по- и суффикс -ому, через дефис','неряшливо — без НЕ не употребляется, слитно','не высоко, а низко — есть противопоставление, раздельно'],
+  'rus-6':['Мне холодно. — состояние человека, сказуемое, подлежащего нет','Он говорил холодно. — наречие, относится к глаголу'],
+  'rus-7':['в течение дня — предлог, на конце Е','в течении реки — существительное, на конце И','из-за, из-под — через дефис','вследствие дождя — предлог, слитно'],
+  'rus-8':['Он устал, но дошёл. — перед НО запятая','Я тоже приду. — союз, пишется слитно','Я сделал то же, что и он. — местоимение с частицей, раздельно'],
+  'rus-9':['Скажи-ка — частица -ка через дефис','Не знал ни одного слова — НИ усиливает отрицание','Что бы мне почитать? — частица БЫ пишется раздельно']
+};
+BOOK_RUS.units.forEach(function(u){ if(RUS_EX[u.id]) u.ex=RUS_EX[u.id]; });
+
 var BOOKS=[BOOK_LIT, BOOK_RUS];
 BOOK_LIT.key='lit'; BOOK_LIT.name='Литература'; BOOK_LIT.cls='7 класс';
 
@@ -2159,6 +2174,14 @@ function renderBooks(){
   var done=(st.units||{});
   var h='<div class="card"><div class="card-hd"><h2>Учебники и программа</h2></div>'+
     '<p class="hint">Открой тему в любом учебнике: сначала разбор, потом вопросы урока и короткий тест.</p></div>';
+  h+='<details class="card oge"><summary><h2>Шпаргалка по русскому</h2><span class="cv">открыть</span></summary>'+
+    '<div class="plan" style="margin-top:10px">'+
+      '<div><b>Н и НН</b><span>полное причастие с приставкой, зависимым словом или от глагола совершенного вида — НН; краткое — одна Н</span></div>'+
+      '<div><b>НЕ с причастием</b><span>слитно, если нет зависимого слова и противопоставления; иначе раздельно</span></div>'+
+      '<div><b>Обороты</b><span>причастный — запятые, если стоит после слова; деепричастный — всегда запятые</span></div>'+
+      '<div><b>Наречия</b><span>после шипящих под ударением О, без ударения Е; по-…-ому, -ему — через дефис</span></div>'+
+      '<div><b>Предлоги</b><span>в течение, в продолжение — на конце Е; из-за, из-под — через дефис</span></div>'+
+    '</div></details>';
   BOOKS.forEach(function(B){
     h+='<div class="card"><div class="card-hd"><h2>'+esc(B.name)+'</h2><span class="muted">'+esc(B.cls)+'</span></div>'+
       '<p class="hint" style="font-weight:650;color:var(--ink);margin-bottom:2px">'+esc(B.authors)+'</p>'+
@@ -2199,11 +2222,13 @@ function renderUnit(id){
       '<p class="hint">'+esc(B.authors.split(',')[0])+' · '+esc(B.name)+'</p>'+
       '<div class="step-h"><i>1</i><b>Что прочитать</b></div>'+
       '<p class="hint">'+esc(u.read)+'</p>'+
-      '<div class="step-h"><i>2</i><b>О чём это</b></div>'+
+      '<div class="step-h"><i>2</i><b>'+(u.ex?'Правило':'О чём это')+'</b></div>'+
       '<ul class="uline">'+u.about.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'+
-      '<div class="step-h"><i>3</i><b>Что спросят на уроке</b></div>'+
+      (u.ex? '<div class="step-h"><i>3</i><b>Примеры: как это выглядит в тетради</b></div>'+
+        '<ul class="uline ex">'+u.ex.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>' : '')+
+      '<div class="step-h"><i>'+(u.ex?4:3)+'</i><b>Что спросят на уроке</b></div>'+
       '<ul class="uline">'+u.ask.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'+
-      '<div class="step-h"><i>4</i><b>Проверь себя</b></div>'+
+      '<div class="step-h"><i>'+(u.ex?5:4)+'</i><b>Проверь себя</b></div>'+
       '<p class="hint" id="ures">'+(res.right!=null? ('Твой результат: '+res.right+' из '+u.quiz.length) : 'Выбери один вариант в каждом вопросе.')+'</p>'+
       u.quiz.map(function(q,qi){
         var chosen=(res.ans && res.ans[qi]!=null)? res.ans[qi] : null;
