@@ -1,5 +1,5 @@
 /* «Учусь» — офлайн-кэш. Версию менять при каждом обновлении index.html. */
-var CACHE = 'uchus-v16';
+var CACHE = 'uchus-v17';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){

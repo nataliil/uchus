@@ -218,6 +218,25 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .opt.ok{border-color:#b6dfc6;background:#e9f7ef;color:#1f7a4d;font-weight:650}
 .opt.no{border-color:#f0c3ae;background:#fdf0e9;color:#8f3a17;font-weight:650}
 .qwhy{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+.shelf button{background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.cover{position:relative;display:flex;flex-direction:column;justify-content:space-between;
+  aspect-ratio:3/4;border-radius:9px;padding:9px 10px 8px 15px;color:#fff;
+  box-shadow:0 10px 18px -12px rgba(34,31,27,.75);overflow:hidden}
+.cover:before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:rgba(0,0,0,.28)}
+.cover:after{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.22)}
+.cv-top{font-family:Georgia,serif;font-size:12px;line-height:1.12;letter-spacing:.02em;text-align:center;margin-top:9px}
+.cv-cls{font-size:19px;font-weight:700;text-align:right;opacity:.92;line-height:1}
+.cover-lit{background:linear-gradient(160deg,#3c6b5c,#1d3d34)}
+.cover-rus{background:linear-gradient(160deg,#c0392b,#7d1d16)}
+.cover-geo{background:linear-gradient(160deg,#66769f,#2c3a63)}
+.shelf .t{display:block;font-size:12.5px;font-weight:650;margin-top:8px;line-height:1.2}
+.shelf .a{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.bhead{display:flex;gap:14px;align-items:flex-start}
+.bhead .cover{flex:0 0 92px;height:auto}
+.binfo{min-width:0}
+.binfo h3{font-size:18px;margin:0 0 5px}
+.binfo .hint{font-size:12.5px;line-height:1.4}
 .oge summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .oge summary::-webkit-details-marker{display:none}
 .oge summary h2{font-size:19px}
@@ -2223,7 +2242,7 @@ var BOOK_GEO = {
 var BOOKS=[BOOK_LIT, BOOK_RUS, BOOK_GEO];
 BOOK_LIT.key='lit'; BOOK_LIT.name='Литература'; BOOK_LIT.cls='7 класс';
 
-var booksState={unit:null};
+var booksState={level:'shelf', book:null};
 
 function bookOfUnit(id){
   for(var i=0;i<BOOKS.length;i++){
@@ -2235,6 +2254,10 @@ function unitById(id){
   for(var i=0;i<BOOKS.length;i++){
     for(var j=0;j<BOOKS[i].units.length;j++){ if(BOOKS[i].units[j].id===id) return BOOKS[i].units[j]; }
   }
+  return null;
+}
+function bookByKey(k){
+  for(var i=0;i<BOOKS.length;i++){ if(BOOKS[i].key===k) return BOOKS[i]; }
   return null;
 }
 
@@ -2251,38 +2274,43 @@ function unitCard(u,i,done){
     '<span class="arrow">›</span></button>';
 }
 
+function coverHtml(B){
+  var short = B.key==='lit' ? ['ЛИТЕРАТУРА'] : (B.key==='rus' ? ['РУССКИЙ','ЯЗЫК'] : ['ГЕОМЕТРИЯ']);
+  return '<span class="cover cover-'+B.key+'">'+
+      '<span class="cv-top">'+esc(short[0])+(short[1]?'<br>'+short[1]:'')+'</span>'+
+      '<span class="cv-cls">'+(B.key==='geo'?'7–9':'7')+'</span>'+
+    '</span>';
+}
+
 function renderBooks(){
-  if(booksState.unit){ renderUnit(booksState.unit); return; }
+  if(booksState.level==='unit' && booksState.unit){ renderUnit(booksState.unit); return; }
+  if(booksState.level==='book' && booksState.book){ renderBook(booksState.book); return; }
+
   var done=(st.units||{});
-  var h='<div class="card"><div class="card-hd"><h2>Учебники и программа</h2></div>'+
-    '<p class="hint">Открой тему в любом учебнике: сначала разбор, потом вопросы урока и короткий тест.</p></div>';
-  h+='<details class="card oge"><summary><h2>Шпаргалка по русскому</h2><span class="cv">открыть</span></summary>'+
-    '<div class="plan" style="margin-top:10px">'+
-      '<div><b>Н и НН</b><span>полное причастие с приставкой, зависимым словом или от глагола совершенного вида — НН; краткое — одна Н</span></div>'+
-      '<div><b>НЕ с причастием</b><span>слитно, если нет зависимого слова и противопоставления; иначе раздельно</span></div>'+
-      '<div><b>Обороты</b><span>причастный — запятые, если стоит после слова; деепричастный — всегда запятые</span></div>'+
-      '<div><b>Наречия</b><span>после шипящих под ударением О, без ударения Е; по-…-ому, -ему — через дефис</span></div>'+
-      '<div><b>Предлоги</b><span>в течение, в продолжение — на конце Е; из-за, из-под — через дефис</span></div>'+
-    '</div></details>';
-  BOOKS.forEach(function(B){
-    h+='<div class="card"><div class="card-hd"><h2>'+esc(B.name)+'</h2><span class="muted">'+esc(B.cls)+'</span></div>'+
-      '<p class="hint" style="font-weight:650;color:var(--ink);margin-bottom:2px">'+esc(B.authors)+'</p>'+
-      '<p class="hint">'+esc(B.title)+' · '+esc(B.pub)+'</p>'+
-      '<div style="margin-top:12px">'+B.units.map(function(u,i){ return unitCard(u,i,done); }).join('')+'</div></div>';
-  });
-  var have={}; BOOKS.forEach(function(B){ have[B.key]=1; });
-  var others=KEYS.filter(function(k){ return !have[k]; });
-  h+='<div class="card"><div class="card-hd"><h2>Другие предметы</h2><span class="muted">нужен автор</span></div>'+
-    '<p class="hint">Впиши автора учебника — добавлю такую же программу с разбором и тестами.</p>'+
-    others.map(function(k){
-      var v=(st.books && st.books[k])||'';
-      return '<div class="brow"><b>'+SUBJ[k].n+'</b>'+
-        '<input id="bk-'+k+'" placeholder="Автор, например Макарычев" value="'+esc(v)+'" autocomplete="off">'+
-        '<button class="btn small" data-bk="'+k+'">Ок</button></div>';
-    }).join('')+'</div>';
+  var h='';
+  h+='<div class="card"><div class="card-hd"><h2>Учебники</h2><span class="muted">'+BOOKS.length+' книги</span></div>'+
+    '<p class="hint">Это не книги целиком, а рабочий разбор: правило, примеры и вопросы — по тому же порядку, что в учебнике. Открывайте тему перед уроком или когда сели за домашку.</p>'+
+    '<div class="shelf">'+BOOKS.map(function(B){
+      return '<button data-book="'+B.key+'">'+coverHtml(B)+
+        '<span class="t">'+esc(B.name)+'</span>'+
+        '<span class="a">'+esc(B.authors.split(',')[0])+' · '+B.units.length+' тем</span></button>';
+    }).join('')+'</div></div>';
+
+  h+='<details class="card"><summary><h2>Другие предметы</h2><span class="cv">'+(KEYS.length-BOOKS.length)+' шт.</span></summary>'+
+    '<p class="hint" style="margin-top:12px">Впиши автора учебника — добавлю такую же книгу с разбором и тестами.</p>'+
+    (function(){
+      var have={}; BOOKS.forEach(function(B){ have[B.key]=1; });
+      return KEYS.filter(function(k){ return !have[k]; }).map(function(k){
+        var v=(st.books && st.books[k])||'';
+        return '<div class="brow"><b>'+SUBJ[k].n+'</b>'+
+          '<input id="bk-'+k+'" placeholder="Автор" value="'+esc(v)+'" autocomplete="off">'+
+          '<button class="btn small" data-bk="'+k+'">Ок</button></div>';
+      }).join('');
+    })()+'</details>';
+
   $('#booksBody').innerHTML=h;
-  $$('#booksBody .ucard').forEach(function(b){
-    b.addEventListener('click',function(){ booksState.unit=b.dataset.unit; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
+  $$('#booksBody button[data-book]').forEach(function(b){
+    b.addEventListener('click',function(){ booksState.level='book'; booksState.book=b.dataset.book; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
   });
   $$('#booksBody button[data-bk]').forEach(function(b){
     b.addEventListener('click',function(){
@@ -2294,8 +2322,31 @@ function renderBooks(){
   });
 }
 
+function renderBook(key){
+  var B=bookByKey(key);
+  if(!B){ booksState.level='shelf'; renderBooks(); return; }
+  var done=(st.units||{});
+  var passed=B.units.filter(function(u){ var d=done[u.id]; return d && d.right>=Math.ceil(u.quiz.length*0.6); }).length;
+  var h='<button class="back" id="bback">‹ все учебники</button>'+
+    '<div class="card" style="margin-top:8px">'+
+      '<div class="bhead">'+coverHtml(B)+
+        '<div class="binfo"><h3>'+esc(B.name)+'</h3>'+
+          '<p class="hint">'+esc(B.authors)+'</p>'+
+          '<p class="hint">'+esc(B.title)+' · '+esc(B.pub)+'</p>'+
+          '<p class="hint" style="margin-top:6px;color:var(--accent-ink);font-weight:600">Пройдено тем: '+passed+' из '+B.units.length+'</p>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:14px">'+B.units.map(function(u,i){ return unitCard(u,i,done); }).join('')+'</div>'+
+    '</div>';
+  $('#booksBody').innerHTML=h;
+  $('#bback').addEventListener('click',function(){ booksState.level='shelf'; booksState.book=null; renderBooks(); });
+  $$('#booksBody .ucard').forEach(function(b){
+    b.addEventListener('click',function(){ booksState.level='unit'; booksState.unit=b.dataset.unit; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
+  });
+}
+
 function renderUnit(id){
-  var u=unitById(id); if(!u){ booksState.unit=null; renderBooks(); return; }
+  var u=unitById(id); if(!u){ booksState.level='shelf'; renderBooks(); return; }
   var B=bookOfUnit(id)||BOOK_LIT;
   var res=(st.units||{})[u.id]||{};
   var h='<button class="back" id="uback">‹ все темы</button>'+
@@ -2326,7 +2377,7 @@ function renderUnit(id){
       }).join('')+
     '</div>';
   $('#booksBody').innerHTML=h;
-  $('#uback').addEventListener('click',function(){ booksState.unit=null; renderBooks(); });
+  $('#uback').addEventListener('click',function(){ booksState.level='book'; booksState.book=B.key; renderBooks(); });
   $$('#booksBody .qq').forEach(function(box){
     box.querySelectorAll('button[data-o]').forEach(function(b){
       b.addEventListener('click',function(){
