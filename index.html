@@ -1937,7 +1937,7 @@ var BOOK_LIT = {
   ]
 };
 function unitHtml(u,i){
-  return '<details class="unit"><summary>'+esc(u.t)+'<span class="n">'+(i+1)+'</span></summary>'+
+  return '<details class="unit"><summary>'+esc(u.t)+'<span class="n">'+u.check.length+' '+plural(u.check.length,'вопрос','вопроса','вопросов')+'</span></summary>'+
     '<div class="u-body">'+
       '<b>Что прочитать</b>'+esc(u.read)+
       '<b>Что спросят</b><ul>'+u.ask.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'+
