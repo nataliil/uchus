@@ -237,6 +237,20 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .binfo{min-width:0}
 .binfo h3{font-size:18px;margin:0 0 5px}
 .binfo .hint{font-size:12.5px;line-height:1.4}
+.askrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.askrow input{flex:1 1 200px;border:1.5px solid var(--line);background:#fffefb;border-radius:11px;
+  padding:11px 12px;font-size:15px;min-width:0}
+.askrow input:focus{outline:none;border-color:var(--accent)}
+.ans{border-top:1px dashed var(--line);padding:12px 0}
+.ans:first-child{border-top:0}
+.ans .k{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ans b{display:block;font-size:14.5px;font-weight:650;margin-top:3px;line-height:1.35}
+.ans p{font-size:13px;color:var(--muted);line-height:1.45;margin-top:4px}
+.ans button{margin-top:8px}
+.qrow{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px;line-height:1.4}
+.qrow:first-child{border-top:0}
+.qrow .tx{flex:1;min-width:0}
+.qrow .qdel{flex:none;color:#bdb6aa;font-size:15px;line-height:1}
 .oge summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .oge summary::-webkit-details-marker{display:none}
 .oge summary h2{font-size:19px}
@@ -1036,7 +1050,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -2303,6 +2317,17 @@ function renderBooks(){
         '<span class="a">'+esc(B.authors.split(',')[0])+' · '+B.units.length+' тем</span></button>';
     }).join('')+'</div></div>';
 
+  h+='<div class="card"><div class="card-hd"><h2>Не понял на уроке?</h2></div>'+
+    '<p class="hint">Напиши своими словами, что спрашивали или что непонятно — найду тему и ответ в учебнике.</p>'+
+    '<div class="askrow"><input id="askInput" placeholder="Например: за что привязывали к позорному столбу" autocomplete="off">'+
+    '<button class="btn small" id="askGo">Найти</button></div>'+
+    '<div id="askRes"></div>'+
+    '<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">'+
+        '<p class="hint" style="font-weight:650;color:var(--ink)">Мои вопросы</p>'+
+        '<button class="mini" id="askSave">Записать вопрос</button></div>'+
+      '<div id="askMine" style="margin-top:6px"></div>'+
+    '</div></div>';
   h+='<details class="card"><summary><h2>Другие предметы</h2><span class="cv">'+(KEYS.length-BOOKS.length)+' шт.</span></summary>'+
     '<p class="hint" style="margin-top:12px">Впиши автора учебника — добавлю такую же книгу с разбором и тестами.</p>'+
     (function(){
@@ -2319,12 +2344,103 @@ function renderBooks(){
   $$('#booksBody button[data-book]').forEach(function(b){
     b.addEventListener('click',function(){ booksState.level='book'; booksState.book=b.dataset.book; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
   });
+  var ai=$('#askInput');
+  if(ai){
+    ai.addEventListener('keydown',function(e){ if(e.key==='Enter'){ $('#askGo').click(); } });
+    $('#askGo').addEventListener('click',function(){ renderAskAnswer(ai.value); });
+    $('#askSave').addEventListener('click',function(){
+      var v=(ai.value||'').trim();
+      if(!v){ ai.focus(); toast('Напиши вопрос в поле выше'); return; }
+      if(!st.qs) st.qs=[];
+      st.qs.unshift({id:'q'+Date.now(), text:v, done:false});
+      save(); renderMine(); toast('Записала вопрос');
+    });
+    renderMine();
+  }
   $$('#booksBody button[data-bk]').forEach(function(b){
     b.addEventListener('click',function(){
       var k=b.dataset.bk, v=($('#bk-'+k).value||'').trim();
       if(!st.books) st.books={};
       st.books[k]=v; save();
       toast(v? ('Записала: '+v) : 'Убрала');
+    });
+  });
+}
+
+function normQ(x){
+  return String(x).toLowerCase().replace(/ё/g,'е')
+    .replace(/[^a-zа-я0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function findAnswers(q){
+  var STOP={'что':1,'как':1,'где':1,'когда':1,'почему':1,'зачем':1,'это':1,'был':1,'была':1,'были':1,'для':1,'или':1,'если':1,'чем':1,'его':1,'она':1,'они':1,'мне':1,'все':1,'этот':1,'такой':1};
+  var words=normQ(q).split(' ').filter(function(w){ return w.length>2 && !STOP[w]; });
+  if(!words.length) return [];
+  var res=[];
+  BOOKS.forEach(function(B){
+    B.units.forEach(function(u){
+      var cands=[{t:u.read}];
+      (u.about||[]).forEach(function(t){ cands.push({t:t}); });
+      (u.ex||[]).forEach(function(t){ cands.push({t:t}); });
+      (u.ask||[]).forEach(function(t){ cands.push({t:t}); });
+      (u.quiz||[]).forEach(function(z){ cands.push({t:z.q+' — '+z.w}); });
+      var hits=0, best=null, bestScore=0;
+      cands.forEach(function(c){
+        if(!c.t) return;
+        var n=normQ(c.t), sc=0;
+        words.forEach(function(w){ if(n.indexOf(w)>=0) sc++; });
+        if(sc>hits) hits=sc;
+        if(sc>bestScore || (sc===bestScore && best && c.t.length<best.length)){ bestScore=sc; best=c.t; }
+      });
+      if(hits) res.push({kind:'Тема в учебнике', title:u.t, sub:B.name, text:(bestScore>0?best:u.read), unit:u.id, score:hits});
+    });
+  });
+  CARD_LIST.forEach(function(c){
+    var n=normQ(c.q), hits=0;
+    words.forEach(function(w){ if(n.indexOf(w)>=0) hits++; });
+    if(hits) res.push({kind:'Карточка', title:c.q, sub:SUBJ[c.s].n, text:c.a, score:hits});
+  });
+  TASKS.forEach(function(t){
+    var n=normQ(t.t+' '+(t.cond||'')), hits=0;
+    words.forEach(function(w){ if(n.indexOf(w)>=0) hits++; });
+    if(hits) res.push({kind:'Задача', title:t.t, sub:SUBJ[t.s].n, text:t.cond, score:hits});
+  });
+  res.sort(function(a,b){ return b.score-a.score; });
+  return res.slice(0,6);
+}
+function renderAskAnswer(q){
+  var box=$('#askRes'); if(!box) return;
+  if(!q || !q.trim()){ box.innerHTML=''; return; }
+  var list=findAnswers(q);
+  if(!list.length){
+    box.innerHTML='<p class="hint" style="margin-top:12px">В учебниках не нашла. Запиши вопрос кнопкой ниже — и спроси у учителя, а я подскажу, где искать.</p>';
+    return;
+  }
+  box.innerHTML=list.map(function(r){
+    return '<div class="ans"><span class="k">'+esc(r.kind)+' · '+esc(r.sub)+'</span>'+
+      '<b>'+esc(r.title)+'</b>'+(r.text? '<p>'+esc(r.text)+'</p>':'')+
+      (r.unit? '<button class="btn small ghost" data-open="'+r.unit+'">Открыть тему</button>':'')+'</div>';
+  }).join('');
+  $$('#askRes button[data-open]').forEach(function(b){
+    b.addEventListener('click',function(){ booksState.level='unit'; booksState.unit=b.dataset.open; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
+  });
+}
+function renderMine(){
+  var box=$('#askMine'); if(!box) return;
+  var qs=(st.qs||[]);
+  if(!qs.length){ box.innerHTML='<p class="hint">Пока пусто. Если что-то непонятно — записывай сюда, чтобы не забыть спросить.</p>'; return; }
+  box.innerHTML=qs.map(function(q){
+    return '<div class="qrow"><div class="tx">'+esc(q.text)+'</div>'+
+      '<button class="mini" data-qdone="'+q.id+'">'+(q.done?'Разобрано ✓':'Разобрал?')+'</button>'+
+      '<button class="qdel" data-qdel="'+q.id+'">×</button></div>';
+  }).join('');
+  $$('#askMine button[data-qdel]').forEach(function(b){
+    b.addEventListener('click',function(){
+      st.qs=st.qs.filter(function(q){ return q.id!==b.dataset.qdel; }); save(); renderMine();
+    });
+  });
+  $$('#askMine button[data-qdone]').forEach(function(b){
+    b.addEventListener('click',function(){
+      (st.qs||[]).forEach(function(q){ if(q.id===b.dataset.qdone) q.done=!q.done; }); save(); renderMine();
     });
   });
 }
