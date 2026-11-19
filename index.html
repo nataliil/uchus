@@ -5815,6 +5815,23 @@ function renderBooks(){
         '<span class="a">'+esc(B.authors.split(',')[0])+' · '+B.units.length+' тем</span></button>';
     }).join('')+'</div></div>';
 
+  h+='<div class="card"><div class="card-hd"><h2>Настоящие учебники — откуда взять</h2></div>'+
+    '<p class="hint">В приложении — разбор тем: правило, примеры, что спросят, тест. Сами книги берутся официально — вот три законных пути.</p>'+
+    '<div class="brow" style="align-items:flex-start;flex-wrap:wrap">'+
+      '<div style="flex:1 1 240px;min-width:0"><b>1. Библиотека МЭШ</b><p class="hint" style="margin-top:4px">Цифровые учебники для московских школьников — бесплатно. Вход по учетной записи МЭШ; в фильтрах слева выбрать «Учебники».</p></div>'+
+      '<a class="btn small" href="https://uchebnik.mos.ru/" target="_blank" rel="noopener">Открыть</a>'+
+    '</div>'+
+    '<div class="brow" style="align-items:flex-start;flex-wrap:wrap;margin-top:10px">'+
+      '<div style="flex:1 1 240px;min-width:0"><b>2. Медиатека «Просвещение»</b><p class="hint" style="margin-top:4px">Электронные учебники (ЭФУ) по коду активации — если школа или вы приобрели лицензию.</p></div>'+
+      '<a class="btn small ghost" href="https://media.prosv.ru/" target="_blank" rel="noopener">Открыть</a>'+
+    '</div>'+
+    '<div class="brow" style="align-items:flex-start;flex-wrap:wrap;margin-top:10px">'+
+      '<div style="flex:1 1 240px;min-width:0"><b>3. Купить ЭФУ</b><p class="hint" style="margin-top:4px">Официальный каталог издательства: лицензия на учебник на год, читается там же — в медиатеке.</p></div>'+
+      '<a class="btn small ghost" href="https://prosv.ru/catalog/elektronnie-uchebniki-i-posobiya" target="_blank" rel="noopener">Каталог</a>'+
+    '</div>'+
+    '<p class="hint" style="margin-top:12px">Бумажные учебники школа обязана выдавать бесплатно — если каких-то не хватает, спросите у классного руководителя. Скачанные чужие сканы в приложение вшивать нельзя — это нарушает авторские права.</p>'+
+  '</div></div>';
+
   h+='<div class="card"><div class="card-hd"><h2>Не понял на уроке?</h2></div>'+
     '<p class="hint">Напиши своими словами, что спрашивали или что непонятно — найду тему и ответ в учебнике.</p>'+
     '<div class="askrow"><input id="askInput" placeholder="Например: за что привязывали к позорному столбу" autocomplete="off">'+
@@ -6447,7 +6464,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v29';
+var APP_BUILD='uchus-v30';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
