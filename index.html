@@ -1101,7 +1101,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, pmedia:[], cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, pmedia:[], prog:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -1116,6 +1116,13 @@ function load(){
     if(!o.profile.cls) o.profile.cls = b.profile.cls;
     if(!o.cab || typeof o.cab!=='object') o.cab = b.cab;
     if(!o.cab.code) o.cab.code = b.cab.code;
+    if(!o.prog || typeof o.prog!=='object') o.prog = {};
+    if(o.books && typeof o.books==='object'){
+      for(var bk in o.books){
+        var vv=String(o.books[bk]||'').trim();
+        if(vv && !o.prog[bk]) o.prog[bk]={a:vv,t:''};
+      }
+    }
     return o;
   }catch(e){ return blank(); }
 }
@@ -6124,6 +6131,10 @@ function ownerTag(){
   if(!n) return 'Мой учебник';
   return n+(c? ' · '+c : '');
 }
+function progOf(B){
+  var o=(st.prog && st.prog[B.key])||{};
+  return {a:o.a||B.authors, t:o.t||B.title, own:!!(o.a||o.t)};
+}
 function coverHtml(B){
   var photo=(st.covers && st.covers[B.key])||'';
   var used=(st.used && st.used[B.key]===false) ? false : true;
@@ -6157,11 +6168,12 @@ function renderBooks(){
   var h='';
   h+='<div class="card"><div class="card-hd"><h2>Учебники</h2><span class="muted">'+BOOKS.length+' книги</span></div>'+
     '<p class="hint">Это не книги целиком, а рабочий разбор: правило, примеры и вопросы — по тому же порядку, что в учебнике. Открывайте тему перед уроком или когда сели за домашку.</p>'+
+    '<p class="hint">Обложки можно поставить свои: откройте книгу и нажмите «Фото обложки» — сфотографируйте учебник, который выдали в школе.</p>'+
     '<div class="shelf">'+BOOKS.map(function(B){
       var unused=(st.used && st.used[B.key]===false);
       return '<button data-book="'+B.key+'"'+(unused?' class="unused"':'')+'>'+coverHtml(B)+
         '<span class="t">'+esc(B.name)+'</span>'+
-        '<span class="a">'+esc(B.authors.split(',')[0])+' · '+B.units.length+' тем</span></button>';
+        '<span class="a">'+esc(progOf(B).a.split(',')[0])+' · '+B.units.length+' тем</span></button>';
     }).join('')+'</div></div>';
 
   h+='<div class="card"><div class="card-hd"><h2>Настоящие учебники — откуда взять</h2></div>'+
@@ -6179,6 +6191,20 @@ function renderBooks(){
       '<a class="btn small ghost" href="https://prosv.ru/catalog/elektronnie-uchebniki-i-posobiya" target="_blank" rel="noopener">Каталог</a>'+
     '</div>'+
     '<p class="hint" style="margin-top:12px">Бумажные учебники школа обязана выдавать бесплатно — если каких-то не хватает, спросите у классного руководителя. Скачанные чужие сканы в приложение вшивать нельзя — это нарушает авторские права.</p>'+
+  '</div></div>';
+
+  h+='<div class="card"><div class="card-hd"><h2>Учебники по программе школы</h2><span class="muted">какие у вас</span></div>'+
+    '<p class="hint">Впишите авторов и названия, как в перечне вашей школы, — они появятся на полке вместо моих подсказок. Пустое поле = оставить как есть.</p>'+
+    BOOKS.map(function(B){
+      var o=(st.prog&&st.prog[B.key])||{};
+      return '<div class="brow" style="flex-wrap:wrap;gap:8px;margin-top:8px">'+
+        '<b style="flex:1 1 120px;min-width:0">'+esc(B.name)+'</b>'+
+        '<input class="cinput" id="pgA-'+B.key+'" style="margin-top:0;flex:1 1 130px" placeholder="Автор" value="'+esc(o.a||'')+'" autocomplete="off">'+
+        '<input class="cinput" id="pgT-'+B.key+'" style="margin-top:0;flex:1 1 170px" placeholder="Название" value="'+esc(o.t||'')+'" autocomplete="off">'+
+      '</div>';
+    }).join('')+
+    '<div style="margin-top:12px"><button class="btn small" id="progSave">Сохранить программу</button></div>'+
+    '<p class="hint" style="margin-top:8px">Перечень учебников школы: <a href="https://sch1259.mskobr.ru/info_edu/education" target="_blank" rel="noopener">сайт школы, раздел «Образование»</a>. Если списка нет — спросите у классного руководителя, какие учебники выдали.</p>'+
   '</div></div>';
 
   var pml=(st.pmedia||[]);
@@ -6230,6 +6256,15 @@ function renderBooks(){
       var i=parseInt(b.dataset.pmdel,10);
       st.pmedia.splice(i,1); save(); renderBooks();
     });
+  });
+  if($('#progSave')) $('#progSave').addEventListener('click',function(){
+    if(!st.prog) st.prog={};
+    BOOKS.forEach(function(B){
+      var a=($('#pgA-'+B.key)?$('#pgA-'+B.key).value:'').trim();
+      var t=($('#pgT-'+B.key)?$('#pgT-'+B.key).value:'').trim();
+      if(a||t){ st.prog[B.key]={a:a,t:t}; } else { delete st.prog[B.key]; }
+    });
+    save(); renderBooks(); toast('Программа сохранена');
   });
   if($('#pmAdd')) $('#pmAdd').addEventListener('click',function(){
     var t=($('#pmName').value||'').trim();
@@ -6408,8 +6443,8 @@ function renderBook(key){
     '<div class="card" style="margin-top:8px">'+
       '<div class="bhead">'+coverHtml(B)+
         '<div class="binfo"><h3>'+esc(B.name)+'</h3>'+
-          '<p class="hint">'+esc(B.authors)+'</p>'+
-          '<p class="hint">'+esc(B.title)+' · '+esc(B.pub)+'</p>'+
+          '<p class="hint">'+esc(progOf(B).a)+'</p>'+
+          '<p class="hint">'+esc(progOf(B).t)+(progOf(B).own?' · по вашей программе':' · '+esc(B.pub))+'</p>'+
           '<p class="hint" style="margin-top:6px;color:var(--accent-ink);font-weight:600">Пройдено тем: '+passed+' из '+B.units.length+'</p>'+
         '</div>'+
       '</div>'+
@@ -6421,10 +6456,25 @@ function renderBook(key){
         '<input type="file" id="coverFile" accept="image/*" hidden>'+
         '<input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden>'+
       '</div>'+
+      '<details class="card" style="margin-top:12px;padding:10px 14px">'+
+        '<summary style="cursor:pointer;font-size:13.5px;font-weight:650">Учебник по программе школы</summary>'+
+        '<p class="hint" style="margin-top:8px">Впишите автора и название так, как в перечне школы — они появятся на полке и здесь.</p>'+
+        '<div class="brow" style="flex-wrap:wrap;gap:8px">'+
+          '<input class="cinput" id="bA" style="margin-top:0;flex:1 1 160px" placeholder="Автор" value="'+esc((st.prog&&st.prog[B.key]&&st.prog[B.key].a)||'')+'" autocomplete="off">'+
+          '<input class="cinput" id="bT" style="margin-top:0;flex:1 1 200px" placeholder="Название учебника" value="'+esc((st.prog&&st.prog[B.key]&&st.prog[B.key].t)||'')+'" autocomplete="off">'+
+          '<button class="btn small" id="bProgSave">Сохранить</button>'+
+        '</div>'+
+      '</details>'+
       '<div style="margin-top:14px">'+B.units.map(function(u,i){ return unitCard(u,i,done); }).join('')+'</div>'+
     '</div>';
   $('#booksBody').innerHTML=h;
   $('#bback').addEventListener('click',function(){ booksState.level='shelf'; booksState.book=null; renderBooks(); });
+  if($('#bProgSave')) $('#bProgSave').addEventListener('click',function(){
+    var a=($('#bA').value||'').trim(), t=($('#bT').value||'').trim();
+    if(!st.prog) st.prog={};
+    if(a||t){ st.prog[B.key]={a:a,t:t}; } else { delete st.prog[B.key]; }
+    save(); renderBooks(); toast('Учебник записан');
+  });
   var cb=$('#coverBtn');
   if(cb){
     cb.addEventListener('click',function(){ $('#coverFile').click(); });
@@ -6844,7 +6894,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v32';
+var APP_BUILD='uchus-v33';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
