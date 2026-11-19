@@ -1101,7 +1101,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, pmedia:[], cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -6181,6 +6181,23 @@ function renderBooks(){
     '<p class="hint" style="margin-top:12px">Бумажные учебники школа обязана выдавать бесплатно — если каких-то не хватает, спросите у классного руководителя. Скачанные чужие сканы в приложение вшивать нельзя — это нарушает авторские права.</p>'+
   '</div></div>';
 
+  var pml=(st.pmedia||[]);
+  h+='<div class="card"><div class="card-hd"><h2>Мои книги «Просвещение»</h2><span class="muted">'+pml.length+'</span></div>'+
+    '<p class="hint">Книги в медиатеке защищены: скачать файл нельзя. Зато можно один раз вставить ссылку на книгу — и Роман откроет её одной кнопкой. Вход в медиатеку выполняет родитель в браузере на этом устройстве, пароль в приложении не хранится.</p>'+
+    (pml.length ? pml.map(function(b,i){
+      return '<div class="brow" style="align-items:center;flex-wrap:wrap;gap:8px">'+
+        '<b style="flex:1 1 140px;min-width:0">'+esc(b.t||'Книга')+'</b>'+
+        '<a class="btn small" href="'+esc(b.u||'#')+'" target="_blank" rel="noopener">Открыть</a>'+
+        '<button class="btn small ghost" data-pmdel="'+i+'">Убрать</button></div>';
+    }).join('') : '<p class="hint" style="margin-top:10px">Пока пусто — добавьте первую книгу ниже.</p>')+
+    '<div class="brow" style="align-items:flex-start;flex-wrap:wrap;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">'+
+      '<input class="cinput" id="pmName" style="margin-top:0;flex:1 1 150px" placeholder="Название: Алгебра 7" autocomplete="off">'+
+      '<input class="cinput" id="pmUrl" style="margin-top:0;flex:1 1 200px" placeholder="Ссылка из медиатеки (https://...)" autocomplete="off">'+
+      '<button class="btn small" id="pmAdd">Добавить</button>'+
+    '</div>'+
+    '<p class="hint" style="margin-top:8px">Как взять ссылку: откройте книгу в медиатеке, скопируйте адрес из строки браузера. <a href="https://media.prosv.ru/content/" target="_blank" rel="noopener">Открыть медиатеку</a></p>'+
+  '</div></div>';
+
   h+='<div class="card"><div class="card-hd"><h2>Не понял на уроке?</h2></div>'+
     '<p class="hint">Напиши своими словами, что спрашивали или что непонятно — найду тему и ответ в учебнике.</p>'+
     '<div class="askrow"><input id="askInput" placeholder="Например: за что привязывали к позорному столбу" autocomplete="off">'+
@@ -6207,6 +6224,20 @@ function renderBooks(){
   $('#booksBody').innerHTML=h;
   $$('#booksBody button[data-book]').forEach(function(b){
     b.addEventListener('click',function(){ booksState.level='book'; booksState.book=b.dataset.book; renderBooks(); window.scrollTo({top:0,behavior:'instant'}); });
+  });
+  $$('#booksBody button[data-pmdel]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var i=parseInt(b.dataset.pmdel,10);
+      st.pmedia.splice(i,1); save(); renderBooks();
+    });
+  });
+  if($('#pmAdd')) $('#pmAdd').addEventListener('click',function(){
+    var t=($('#pmName').value||'').trim();
+    var u=($('#pmUrl').value||'').trim();
+    if(!u || !/^https?:\/\//i.test(u)){ toast('Нужна ссылка, начинающаяся с https://'); $('#pmUrl').focus(); return; }
+    if(!t) t='Книга';
+    if(!st.pmedia) st.pmedia=[];
+    st.pmedia.push({t:t,u:u}); save(); renderBooks(); toast('Добавила книгу');
   });
   var ai=$('#askInput');
   if(ai){
@@ -6813,7 +6844,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v31';
+var APP_BUILD='uchus-v32';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
