@@ -1112,6 +1112,15 @@ function blank(){
 function hwNorm(t){
   return String(t||'').toLowerCase().replace(/[^a-zа-яё0-9 ]+/gi,' ').replace(/\s+/g,' ').trim();
 }
+function hwSim(a,b){
+  var wa=hwNorm(a).split(' ').filter(Boolean), wb=hwNorm(b).split(' ').filter(Boolean);
+  if(!wa.length || !wb.length) return 0;
+  var set={}, common=0;
+  wa.forEach(function(w){ set[w]=1; });
+  var used={};
+  wb.forEach(function(w){ if(set[w] && !used[w]){ common++; used[w]=1; } });
+  return common / Math.max(wa.length, wb.length);
+}
 function hwDup(list){
   var out=[];
   (list||[]).forEach(function(h){
@@ -1120,10 +1129,8 @@ function hwDup(list){
     if(/^(нет дз|не задано|нет домашнего)/.test(n)) return;
     var dup=out.some(function(o){
       if(o.s!==h.s) return false;
-      var on=hwNorm(o.text);
-      if(on===n) return true;
-      var a=on.slice(0,25), b=n.slice(0,25);
-      return a===b || (a.length>12 && n.indexOf(a)===0) || (b.length>12 && on.indexOf(b)===0);
+      if(hwNorm(o.text)===n) return true;
+      return hwSim(o.text, h.text) >= 0.7;
     });
     if(dup) return;
     out.push(h);
@@ -1144,7 +1151,10 @@ function load(){
     if(!o.cab || typeof o.cab!=='object') o.cab = b.cab;
     if(!o.cab.code) o.cab.code = b.cab.code;
     if(!o.prog || typeof o.prog!=='object') o.prog = {};
-    if(o.hw && o.hw.length) o.hw = hwDup(o.hw);
+    if(o.hw && o.hw.length){
+      var clean=hwDup(o.hw);
+      if(clean.length !== o.hw.length){ o.hw = clean; o._dirty = 1; }
+    }
     if(o.books && typeof o.books==='object'){
       for(var bk in o.books){
         var vv=String(o.books[bk]||'').trim();
@@ -6696,10 +6706,8 @@ function fetchCabinet(silent){
         var normNew=hwNorm(text);
         var dup=st.hw.some(function(h){
           if(h.s!==key) return false;
-          var hn=hwNorm(h.text);
-          if(hn===normNew) return true;
-          var a=hn.slice(0,25), b=normNew.slice(0,25);
-          return a===b || (a.length>12 && normNew.indexOf(a)===0) || (b.length>12 && hn.indexOf(b)===0);
+          if(hwNorm(h.text)===normNew) return true;
+          return hwSim(h.text, text) >= 0.7;
         });
         if(dup) return;
         st.hw.push({id:'c'+Date.now()+Math.floor(Math.random()*1000), s:key, text:text, due:due, done:false});
@@ -6976,7 +6984,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v36';
+var APP_BUILD='uchus-v37';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
