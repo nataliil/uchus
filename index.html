@@ -36,6 +36,12 @@ input,select{font:inherit;color:inherit}
 .cabchip{cursor:pointer;border:1px solid var(--accent);background:var(--soft);color:var(--accent-ink);
   font:600 12.5px/1 system-ui,Segoe UI,Roboto,sans-serif}
 .cabchip:active{transform:translateY(1px)}
+.homechip{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font:600 12.5px/1 system-ui,Segoe UI,Roboto,sans-serif}
+.chip[hidden],.homechip[hidden]{display:none!important}
+.homechip:active{transform:translateY(1px)}
+.brand{cursor:pointer}
+.back+.back{margin-left:10px}
 .top.scrolled{border-bottom-color:var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fffdf8;
@@ -404,7 +410,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <div class="mark">У</div>
     <div><b>Учусь</b><small id="brandSub">7 класс · помощник</small></div>
   </div>
-  <div class="top-right"><button class="chip cabchip" id="cabBtn" type="button">Кабинет</button><div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div></div>
+  <div class="top-right"><button class="chip homechip" id="homeBtn" type="button" title="На главную — к домашке">⌂ Главная</button><button class="chip cabchip" id="cabBtn" type="button">Кабинет</button><div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div></div>
 </header>
 
 <nav class="tabs" id="tabs" aria-label="Разделы">
@@ -1205,6 +1211,11 @@ function toast(msg){
    Навигация
    ============================================================ */
 var curView='today';
+function homeBtn(){ return '<button class="back" data-home="1" title="Вернуться к домашке">⌂ На главную</button>'; }
+function updHomeBtn(){
+  var b=$('#homeBtn'); if(!b) return;
+  b.hidden = (curView==='today');
+}
 function go(v){
   curView=v;
   $$('.tab').forEach(function(b){
@@ -1220,11 +1231,18 @@ function go(v){
   if(v==='steps') renderSteps();
   if(v==='books') renderBooks();
   if(v==='progress') renderProgress();
+  updHomeBtn();
 }
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-home]');
+  if(t){ go('today'); }
+});
 $('#tabs').addEventListener('click',function(e){
   var b=e.target.closest('.tab'); if(!b) return;
   go(b.dataset.view);
 });
+$('.brand').addEventListener('click',function(){ go('today'); });
+updHomeBtn();
 window.addEventListener('scroll',function(){
   $('#top').classList.toggle('scrolled', window.scrollY>4);
 },{passive:true});
@@ -1857,7 +1875,7 @@ function renderProof(){
   var p=PROOF_BY_ID[proofState.id];
   if(!p){ proofState.id=null; renderSteps(); return; }
   var cur=proofState.cur;
-  var html='<button class="back" id="backProofs">‹ все доказательства</button>'+
+  var html='<button class="back" id="backProofs">‹ все доказательства</button>'+homeBtn()+
     '<h3 style="font-size:19px;margin:6px 0 2px">'+esc(p.t)+'</h3>'+
     '<div class="proof-given"><div><b>Дано</b>'+esc(p.g)+'</div><div><b>Доказать</b>'+esc(p.p)+'</div></div>';
   if(cur>0){
@@ -1926,7 +1944,7 @@ function renderTask(){
   var t=TASK_BY_ID[stepsState.taskId];
   if(!t){ renderSteps(); return; }
   var S=SUBJ[t.s];
-  var html='<button class="back" id="backList">‹ все задачи</button>'+
+  var html='<button class="back" id="backList">‹ все задачи</button>'+homeBtn()+
     '<h3 style="font-size:19px;margin:6px 0 2px">'+esc(t.t)+'</h3>'+
     '<div class="cond">'+esc(t.cond)+'</div>'+
     '<ol class="ladder" id="ladder">';
@@ -6439,7 +6457,7 @@ function renderBook(key){
   var done=(st.units||{});
   var passed=B.units.filter(function(u){ var d=done[u.id]; return d && d.right>=Math.ceil(u.quiz.length*0.6); }).length;
   var pdfHere=(typeof pdfState!=='undefined') && pdfState[B.key];
-  var h='<button class="back" id="bback">‹ все учебники</button>'+
+  var h='<button class="back" id="bback">‹ все учебники</button>'+homeBtn()+
     '<div class="card" style="margin-top:8px">'+
       '<div class="bhead">'+coverHtml(B)+
         '<div class="binfo"><h3>'+esc(B.name)+'</h3>'+
@@ -6542,7 +6560,7 @@ function renderUnit(id){
   var u=unitById(id); if(!u){ booksState.level='shelf'; renderBooks(); return; }
   var B=bookOfUnit(id)||BOOK_LIT;
   var res=(st.units||{})[u.id]||{};
-  var h='<button class="back" id="uback">‹ все темы</button>'+
+  var h='<button class="back" id="uback">‹ все темы</button>'+homeBtn()+
     '<div class="card" style="margin-top:8px">'+
       '<h3 style="font-size:19px;margin:2px 0 4px">'+esc(u.t)+'</h3>'+
       '<p class="hint">'+esc(B.authors.split(',')[0])+' · '+esc(B.name)+'</p>'+
@@ -6888,13 +6906,14 @@ if(st.cab && st.cab.code) fetchCabinet(true);
 importFromHash();
 renderStreak();
 showLock();
+if($('#homeBtn')) $('#homeBtn').addEventListener('click',function(){ go('today'); });
 $('#cabBtn').addEventListener('click',function(){
   go('progress');
   setTimeout(function(){ var c=$('#cabinetCard'); if(c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 120);
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v33';
+var APP_BUILD='uchus-v34';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
