@@ -426,12 +426,6 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
       <p class="sub" id="todaySub">—</p>
     </div>
 
-    <div class="card" id="planCard">
-      <div class="card-hd"><h2>Три шага на сегодня</h2><span class="muted" id="planCount">—</span></div>
-      <p class="hint" style="margin-bottom:2px">Иди сверху вниз: сначала домашка, потом пять минут. Третий шаг — только если что-то не получается.</p>
-      <ol class="steps" id="planSteps"></ol>
-    </div>
-
     <div class="card">
       <div class="card-hd"><h2>Домашка</h2>
         <div style="display:flex;align-items:center;gap:8px">
@@ -485,6 +479,13 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
         </div>
       </div>
     </div>
+
+    <div class="card" id="planCard">
+      <div class="card-hd"><h2>Что дальше</h2><span class="muted" id="planCount">—</span></div>
+      <p class="hint" style="margin-bottom:2px">Домашка — список выше. После неё — пять минут повторения. Помощь — если что-то непонятно.</p>
+      <ol class="steps" id="planSteps"></ol>
+    </div>
+
 
   </section>
 
@@ -1250,23 +1251,17 @@ function renderToday(){
 
 function renderPlan(){
   var d=today();
-  var open=st.hw.filter(function(x){return !x.done;});
-  var leftToday=open.filter(function(x){return x.due<=d;}).length;
   var plan=sessionPlan().length;
   var practiced=(st.streak.days||[]).indexOf(d)>=0;
-  var hwDone=open.length===0;
   var steps=[
-    {n:1, t:'Домашка', done:hwDone,
-     sub: hwDone ? 'Всё отмечено — список чист.' : 'Открой список и отметь галочкой, что уже сделал. Осталось '+open.length+' '+plural(open.length,'задание','задания','заданий')+(leftToday? ', из них '+leftToday+' на сегодня':'')+'.',
-     btn:'К списку', act:'scroll'},
-    {n:2, t:'Повторить 5 минут', done:practiced,
+    {n:1, t:'Повторить 5 минут', done:practiced,
      sub: practiced ? 'На сегодня карточки сделаны — возвращайся завтра.' : 'Короткое повторение: '+plan+' '+plural(plan,'карточка','карточки','карточек')+'. Это четыре минуты.',
      btn: practiced? 'Ещё подход' : 'Начать', act:'cards'},
-    {n:3, t:'Застрял на задаче?', done:false,
+    {n:2, t:'Застрял на задаче?', done:false,
      sub:'Открой помощь: приложение будет задавать вопросы, а не выдавать готовый ответ.',
      btn:'Открыть', act:'help'}
   ];
-  $('#planCount').textContent=((hwDone?1:0)+(practiced?1:0))+' из 2';
+  $('#planCount').textContent=practiced?'готово ✓':'2 шага';
   $('#planSteps').innerHTML=steps.map(function(s){
     return '<li class="stp'+(s.done?' done':'')+'">'+
       '<span class="n">'+(s.done?'✓':s.n)+'</span>'+
@@ -2862,11 +2857,29 @@ renderStreak();
 showLock();
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
+var APP_BUILD='uchus-v25';
+function healCache(){
+  fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+    var m=t.match(/var CACHE = '(uchus-v\d+)'/);
+    if(!m || m[1]===APP_BUILD) return;
+    caches.keys().then(function(ks){
+      return Promise.all(ks.map(function(k){ return caches.delete(k); }));
+    }).then(function(){
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(rs){
+          var p=Promise.all(rs.map(function(r){ return r.unregister(); }));
+          p.then(function(){ location.reload(); });
+        });
+      } else { location.reload(); }
+    });
+  }).catch(function(){});
+}
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('sw.js').catch(function(){});
+    healCache();
   });
-}
+} else if(location.protocol==='file:'){ healCache(); }
 </script>
 </body>
 </html>
