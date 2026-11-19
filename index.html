@@ -1099,7 +1099,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:''}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -1109,6 +1109,11 @@ function load(){
     if(!o || typeof o !== 'object') return blank();
     var b = blank();
     for(var k in b) if(!(k in o)) o[k] = b[k];
+    if(!o.profile || typeof o.profile!=='object') o.profile = b.profile;
+    if(!o.profile.name) o.profile.name = b.profile.name;
+    if(!o.profile.cls) o.profile.cls = b.profile.cls;
+    if(!o.cab || typeof o.cab!=='object') o.cab = b.cab;
+    if(!o.cab.code) o.cab.code = b.cab.code;
     return o;
   }catch(e){ return blank(); }
 }
@@ -6442,7 +6447,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v28';
+var APP_BUILD='uchus-v29';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
