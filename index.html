@@ -32,6 +32,10 @@ input,select{font:inherit;color:inherit}
 .top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
   gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
   background:rgba(246,244,239,.88);backdrop-filter:blur(12px);border-bottom:1px solid transparent}
+.top-right{display:flex;align-items:center;gap:8px}
+.cabchip{cursor:pointer;border:1px solid var(--accent);background:var(--soft);color:var(--accent-ink);
+  font:600 12.5px/1 system-ui,Segoe UI,Roboto,sans-serif}
+.cabchip:active{transform:translateY(1px)}
 .top.scrolled{border-bottom-color:var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fffdf8;
@@ -396,7 +400,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <div class="mark">У</div>
     <div><b>Учусь</b><small>7 класс · помощник</small></div>
   </div>
-  <div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div>
+  <div class="top-right"><button class="chip cabchip" id="cabBtn" type="button">Кабинет</button><div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div></div>
 </header>
 
 <nav class="tabs" id="tabs" aria-label="Разделы">
@@ -2755,7 +2759,7 @@ function renderProgress(){
   var tasksDone=TASKS.filter(function(t){ return st.tasks[t.id]; }).length;
   var h='';
 
-  h+='<div class="card"><div class="card-hd"><h2>Кабинет ученика</h2><span class="muted">'+(st.profile.pin?'под кодом':'без кода')+'</span></div>'+
+  h+='<div class="card" id="cabinetCard"><div class="card-hd"><h2>Кабинет ученика</h2><span class="muted">'+(st.profile.pin?'под кодом':'без кода')+'</span></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<input class="cinput" id="profName" style="margin-top:0;flex:1 1 130px" placeholder="Имя" value="'+esc(st.profile.name||'')+'" autocomplete="off">'+
       '<input class="cinput" id="profClass" style="margin-top:0;flex:0 0 88px" placeholder="Класс" value="'+esc(st.profile.cls||'')+'" autocomplete="off">'+
@@ -2925,6 +2929,10 @@ if(st.cab && st.cab.code) fetchCabinet(true);
 importFromHash();
 renderStreak();
 showLock();
+$('#cabBtn').addEventListener('click',function(){
+  go('progress');
+  setTimeout(function(){ var c=$('#cabinetCard'); if(c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 120);
+});
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
 var APP_BUILD='uchus-v25';
