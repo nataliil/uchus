@@ -1107,7 +1107,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, pmedia:[], prog:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'Роман',cls:'7 Г',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:'roman7g'}, pmedia:[], prog:{}, bm:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -6475,6 +6475,25 @@ function renderBook(key){
         '<input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden>'+
       '</div>'+
       '<details class="card" style="margin-top:12px;padding:10px 14px">'+
+        '<summary style="cursor:pointer;font-size:13.5px;font-weight:650">Закладки к страницам'+(function(){ var n=((st.bm&&st.bm[B.key])||[]).length; return n? ' · '+n : ''; })()+'</summary>'+
+        '<p class="hint" style="margin-top:8px">Запишите страницу и что на ней — например, «118, причастие». Роман увидит закладку здесь, когда сядет за домашку.</p>'+
+        (function(){
+          var list=(st.bm&&st.bm[B.key])||[];
+          if(!list.length) return '<p class="hint" style="margin-top:6px">Пока нет ни одной закладки.</p>';
+          return list.map(function(b,i){
+            return '<div class="brow" style="align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px">'+
+              '<b style="flex:0 0 auto">стр. '+esc(b.p||'—')+'</b>'+
+              '<span style="flex:1 1 120px;min-width:0">'+esc(b.n||'')+'</span>'+
+              '<button class="btn small ghost" data-bmdel="'+i+'">Убрать</button></div>';
+          }).join('');
+        })()+
+        '<div class="brow" style="flex-wrap:wrap;gap:8px;margin-top:10px">'+
+          '<input class="cinput" id="bmPage" style="margin-top:0;flex:0 0 92px" placeholder="Стр." inputmode="numeric" autocomplete="off">'+
+          '<input class="cinput" id="bmNote" style="margin-top:0;flex:1 1 160px" placeholder="Что там: причастие" autocomplete="off">'+
+          '<button class="btn small" id="bmAdd">Добавить</button>'+
+        '</div>'+
+      '</details>'+
+      '<details class="card" style="margin-top:12px;padding:10px 14px">'+
         '<summary style="cursor:pointer;font-size:13.5px;font-weight:650">Учебник по программе школы</summary>'+
         '<p class="hint" style="margin-top:8px">Впишите автора и название так, как в перечне школы — они появятся на полке и здесь.</p>'+
         '<div class="brow" style="flex-wrap:wrap;gap:8px">'+
@@ -6487,6 +6506,20 @@ function renderBook(key){
     '</div>';
   $('#booksBody').innerHTML=h;
   $('#bback').addEventListener('click',function(){ booksState.level='shelf'; booksState.book=null; renderBooks(); });
+  $$('#booksBody button[data-bmdel]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var i=parseInt(b.dataset.bmdel,10);
+      if(st.bm && st.bm[B.key]){ st.bm[B.key].splice(i,1); save(); renderBooks(); }
+    });
+  });
+  if($('#bmAdd')) $('#bmAdd').addEventListener('click',function(){
+    var pg=($('#bmPage').value||'').trim(), nt=($('#bmNote').value||'').trim();
+    if(!pg && !nt){ toast('Напишите страницу или заметку'); return; }
+    if(!st.bm) st.bm={};
+    if(!st.bm[B.key]) st.bm[B.key]=[];
+    st.bm[B.key].push({p:pg, n:nt});
+    save(); renderBooks(); toast('Закладка добавлена');
+  });
   if($('#bProgSave')) $('#bProgSave').addEventListener('click',function(){
     var a=($('#bA').value||'').trim(), t=($('#bT').value||'').trim();
     if(!st.prog) st.prog={};
@@ -6635,6 +6668,7 @@ function fetchCabinet(silent){
       list.forEach(function(item){
         var key=mapSubject(item.s);
         var text=(item.text||'').trim();
+        if(/^(нет дз|не задано|нет домашнего)/i.test(text)) return;
         var due=item.due||today();
         if(!key||!text) return;
         var dup=st.hw.some(function(h){ return h.s===key && h.text===text && h.due===due; });
@@ -6913,7 +6947,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v34';
+var APP_BUILD='uchus-v35';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
