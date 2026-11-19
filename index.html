@@ -1083,7 +1083,7 @@ PROOFS.forEach(function(p){ PROOF_BY_ID[p.id] = p; });
 var KEY = 'uchus_v1';
 var st = load();
 function blank(){
-  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
+  return {v:1, seeded:false, profile:{name:'',cls:'',pin:''}, books:{}, units:{}, qs:[], covers:{}, used:{}, cab:{code:''}, cards:{}, tasks:{}, proofs:{}, stuck:[], hw:[], minutes:{}, ans:{}, streak:{last:null,count:0,days:[]}, total:{sessions:0,answers:0}};
 }
 function load(){
   try{
@@ -2697,6 +2697,57 @@ function renderUnit(id){
   });
 }
 
+function mapSubject(name){
+  var n=normQ(name||'');
+  if(!n) return null;
+  for(var i=0;i<KEYS.length;i++){
+    var nn=normQ(SUBJ[KEYS[i]].n);
+    if(nn && n.indexOf(nn)>=0) return KEYS[i];
+  }
+  if(n.indexOf('англ')>=0) return 'en';
+  if(n.indexOf('иностран')>=0) return null;
+  return null;
+}
+function fetchCabinet(silent){
+  var code=(st.cab && st.cab.code)||'';
+  if(!code) return Promise.resolve(0);
+  return fetch('api.php?code='+encodeURIComponent(code),{cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var list=j.hw||[];
+      var added=0;
+      list.forEach(function(item){
+        var key=mapSubject(item.s);
+        var text=(item.text||'').trim();
+        var due=item.due||today();
+        if(!key||!text) return;
+        var dup=st.hw.some(function(h){ return h.s===key && h.text===text && h.due===due; });
+        if(dup) return;
+        st.hw.push({id:'c'+Date.now()+Math.floor(Math.random()*1000), s:key, text:text, due:due, done:false});
+        added++;
+      });
+      save();
+      if(added>0){
+        st.hw = st.hw.filter(function(h){ return String(h.id).indexOf('seed')!==0; });
+        save();
+      }
+      renderToday(); renderStreak();
+      pushToCabinet();
+      if(!silent) toast(added? ('Загружено: '+added+' '+plural(added,'задание','задания','заданий')) : 'В кабинете нет новых заданий');
+      return added;
+    }).catch(function(){ if(!silent) toast('Кабинет недоступен — проверьте интернет'); return 0; });
+}
+function pushToCabinet(){
+  var code=(st.cab && st.cab.code)||'';
+  if(!code) return Promise.resolve(false);
+  var hw=st.hw.filter(function(h){ return !h.done; }).map(function(h){ return {s:SUBJ[h.s].n, text:h.text, due:h.due}; });
+  return fetch('api.php?code='+encodeURIComponent(code),{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({hw:hw})
+  }).then(function(r){ return r.json(); }).then(function(j){ return !!j.ok; })
+    .catch(function(){ return false; });
+}
+
 function renderProgress(){
   var d=today();
   var learned=CARD_LIST.filter(function(c){ var r=st.cards[c.id]; return r && (r.b||0)>=3; }).length;
@@ -2716,6 +2767,14 @@ function renderProgress(){
       '<div id="pinBox" '+(st.profile.pin?'':'hidden')+' style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
         '<input class="cinput" id="profPin" style="margin-top:0;flex:1 1 110px;letter-spacing:.2em" inputmode="numeric" maxlength="4" placeholder="4 цифры">'+
         '<button class="btn small" id="pinSave">Задать код</button>'+
+      '</div>'+
+      '<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">'+
+        '<p class="hint" style="font-weight:650;color:var(--ink)">Домашка из МЭШ — на все устройства</p>'+
+        '<p class="hint" style="margin-top:4px">Код кабинета связывает телефон, планшет и компьютер. На компьютере расширение МЭШ кладёт домашку в кабинет — здесь она подтягивается сама.</p>'+
+        '<div class="askrow"><input id="cabCode" placeholder="Код кабинета (4–8 символов)" value="'+esc(st.cab.code||'')+'" autocomplete="off">'+
+        '<button class="btn small" id="cabSave">Сохранить</button>'+
+        '<button class="btn small ghost" id="cabFetch">Загрузить сейчас</button></div>'+
+        '<p class="hint" id="cabStatus" style="margin-top:8px">Код: '+(st.cab.code?'задан':'не задан')+'</p>'+
       '</div>'+
       '<p class="hint" style="margin-top:10px">Данные ученика хранятся только на этом устройстве — никуда не отправляются, и в МЭШ приложение не входит. Код — замок от случайных глаз, а не шифрование.</p>'+
     '</div></div>';
@@ -2798,6 +2857,16 @@ function renderProgress(){
     if(v.length!==4){ toast('Нужно ровно четыре цифры'); $('#profPin').focus(); return; }
     st.profile.pin=pinHash(v); save(); renderProgress(); toast('Код задан — теперь при входе спросит');
   });
+  if($('#cabSave')) $('#cabSave').addEventListener('click',function(){
+    var v=($('#cabCode').value||'').replace(/[^A-Za-z0-9]/g,'');
+    if(v.length<4){ toast('Код — от 4 до 20 символов'); $('#cabCode').focus(); return; }
+    st.cab.code=v; save(); renderProgress(); toast('Кабинет сохранён — домашка будет подтягиваться');
+  });
+  if($('#cabFetch')) $('#cabFetch').addEventListener('click',function(){
+    if(!st.cab.code){ toast('Сначала задайте код кабинета'); return; }
+    toast('Загружаю из кабинета…');
+    fetchCabinet(false);
+  });
   $('#resetAll').addEventListener('click',function(){
     if(confirm('Удалить серию, карточки и отметки по задачам? Домашка тоже удалится.')){
       st=blank(); st.seeded=true; save();
@@ -2852,6 +2921,7 @@ $('#lockReset').addEventListener('click',function(){
 seedHwIfNeeded();
 renderToday();
 loadPdfs();
+if(st.cab && st.cab.code) fetchCabinet(true);
 importFromHash();
 renderStreak();
 showLock();
