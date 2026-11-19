@@ -262,6 +262,10 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 .reader .rhead button{border:1px solid var(--line);background:#fffefb;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:650}
 .reader iframe{flex:1;width:100%;border:0;background:#f3f1ec}
 .reader .rhint{padding:6px 14px;font-size:12px;color:var(--muted);background:#fbf9f3;border-bottom:1px solid var(--line)}
+.hwhelp-body{padding:14px 16px 24px;overflow:auto;flex:1}
+.hw .txt{cursor:pointer}
+.hw .txt:active{opacity:.7}
+.hw-tap{font-size:12px;color:var(--muted);margin-top:8px}
 
 .askrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .askrow input{flex:1 1 200px;border:1.5px solid var(--line);background:#fffefb;border-radius:11px;
@@ -437,6 +441,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
           <button class="mini accent" id="hwOpenPaste">Из МЭШ</button>
         </div>
       </div>
+      <p class="hint hw-tap">Нажми на задание — покажу, какую тему открыть в учебнике и что делать.</p>
       <div id="hwBody"></div>
       <p class="hint" id="hwNote" style="margin-top:12px" hidden>Это примеры, чтобы было с чего начать. Замени своими: старые убираются крестиком, а внизу можно добавить свои или вставить список из МЭШ.</p>
       <div class="paste" id="hwPaste" hidden>
@@ -531,6 +536,13 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
     <p class="hint" id="lockMsg" style="margin-top:10px">Четыре цифры, которые ты задал сам</p>
     <button class="reset" id="lockReset" style="margin-top:14px">Забыл код — сбросить</button>
   </div>
+</div>
+
+<div class="reader" id="hwHelp" hidden>
+  <div class="rhead"><b id="hwHelpTitle">Задание</b>
+    <button id="hwHelpClose">Закрыть ✕</button>
+  </div>
+  <div class="hwhelp-body" id="hwHelpBody"></div>
 </div>
 
 <div class="reader" id="reader" hidden>
@@ -1343,7 +1355,10 @@ function hwRow(h){
     '<button class="del" data-act="del" aria-label="Удалить">×</button></li>';
 }
 $('#hwBody').addEventListener('click',function(e){
-  var b=e.target.closest('[data-act]'); if(!b) return;
+  var li0=e.target.closest('.hw');
+  var b=e.target.closest('[data-act]');
+  if(!b && li0){ openHwHelp(li0.dataset.id); return; }
+  if(!b) return;
   var li=e.target.closest('.hw'); if(!li) return;
   var id=li.dataset.id, act=b.dataset.act;
   if(act==='del'){
@@ -2751,6 +2766,61 @@ function pushToCabinet(){
   }).then(function(r){ return r.json(); }).then(function(j){ return !!j.ok; })
     .catch(function(){ return false; });
 }
+
+function openHwHelp(id){
+  var h=st.hw.filter(function(x){ return x.id===id; })[0];
+  if(!h) return;
+  var S=SUBJ[h.s];
+  $('#hwHelpTitle').textContent=S.n;
+  var body='<p style="font-size:15px;line-height:1.45;color:var(--ink)">'+esc(h.text)+'</p>';
+
+  var book=BOOKS.filter(function(B){ return B.key===h.s; })[0];
+  var topics=book? findAnswers(h.text).filter(function(r){
+    if(!r.unit) return false;
+    return book.units.some(function(u){ return u.id===r.unit; });
+  }) : [];
+  if(topics.length){
+    body+='<div class="step-h"><i>1</i><b>Что почитать в учебнике</b></div>';
+    body+=topics.slice(0,3).map(function(r){
+      return '<div class="ans"><span class="k">'+esc(r.sub)+'</span><b>'+esc(r.title)+'</b>'+
+        (r.text? '<p>'+esc(r.text)+'</p>':'')+
+        '<button class="btn small" data-open="'+r.unit+'">Открыть тему</button></div>';
+    }).join('');
+  }
+
+  var ts=TASKS.filter(function(t){ return t.s===h.s; });
+  if(ts.length){
+    body+='<div class="step-h"><i>'+(topics.length?2:1)+'</i><b>Разобрать по шагам</b></div>';
+    body+=ts.slice(0,3).map(function(t){
+      return '<div class="ans"><b>'+esc(t.t)+'</b><p>'+esc(t.cond)+'</p>'+
+        '<button class="btn small ghost" data-task="'+t.id+'">Открыть задачу</button></div>';
+    }).join('');
+  }
+
+  if(!topics.length && !ts.length){
+    body+='<p class="hint" style="margin-top:14px">По этому предмету пока нет учебника в приложении — открой «Помощь», там задачи по шагам.</p>';
+  }
+  body+='<div class="actions" style="margin-top:16px"><button class="btn wide ghost" id="hwHelpOk">Понятно</button></div>';
+  $('#hwHelpBody').innerHTML=body;
+  $('#hwHelp').hidden=false;
+
+  $$('#hwHelpBody button[data-open]').forEach(function(b){
+    b.addEventListener('click',function(){
+      $('#hwHelp').hidden=true;
+      booksState={level:'unit', book:null, unit:b.dataset.open};
+      go('books');
+    });
+  });
+  $$('#hwHelpBody button[data-task]').forEach(function(b){
+    b.addEventListener('click',function(){
+      $('#hwHelp').hidden=true;
+      stepsState={mode:'tasks', subj:h.s, taskId:b.dataset.task, step:0, hint:false, msg:null, given:[]};
+      go('steps');
+    });
+  });
+  var ok=$('#hwHelpOk'); if(ok) ok.addEventListener('click',function(){ $('#hwHelp').hidden=true; });
+}
+$('#hwHelpClose').addEventListener('click',function(){ $('#hwHelp').hidden=true; });
 
 function renderProgress(){
   var d=today();
