@@ -402,7 +402,7 @@ main{max-width:920px;margin:0 auto;padding:4px 16px 24px}
 <header class="top" id="top">
   <div class="brand">
     <div class="mark">У</div>
-    <div><b>Учусь</b><small>7 класс · помощник</small></div>
+    <div><b>Учусь</b><small id="brandSub">7 класс · помощник</small></div>
   </div>
   <div class="top-right"><button class="chip cabchip" id="cabBtn" type="button">Кабинет</button><div class="chip" id="streakChip"><span class="dot"></span><span id="streakTxt">серия 0</span></div></div>
 </header>
@@ -1255,6 +1255,11 @@ function renderToday(){
   var h=new Date().getHours();
   var g = h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
   $('#greet').textContent = (st.profile && st.profile.name) ? (g+', '+st.profile.name) : g;
+  var bs=$('#brandSub');
+  if(bs){
+    var nm=(st.profile && st.profile.name)||'';
+    bs.textContent = nm ? (nm+((st.profile.cls)?' · '+st.profile.cls:'')) : '7 класс · помощник';
+  }
   var left=st.hw.filter(function(x){return !x.done;}).length;
   var plan=sessionPlan().length;
   $('#todaySub').textContent = left
@@ -2735,6 +2740,11 @@ function fetchCabinet(silent){
     .then(function(j){
       var list=j.hw||[];
       var added=0;
+      if(j.name && !((st.profile&&st.profile.name)||'')){
+        st.profile.name=j.name;
+        if(j.cls && !((st.profile&&st.profile.cls)||'')) st.profile.cls=j.cls;
+        renderToday();
+      }
       list.forEach(function(item){
         var key=mapSubject(item.s);
         var text=(item.text||'').trim();
@@ -2760,9 +2770,10 @@ function pushToCabinet(){
   var code=(st.cab && st.cab.code)||'';
   if(!code) return Promise.resolve(false);
   var hw=st.hw.filter(function(h){ return !h.done; }).map(function(h){ return {s:SUBJ[h.s].n, text:h.text, due:h.due}; });
+  var nm=(st.profile && st.profile.name)||'', cl=(st.profile && st.profile.cls)||'';
   return fetch('api.php?code='+encodeURIComponent(code),{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({hw:hw})
+    body: JSON.stringify({hw:hw, name:nm, cls:cl})
   }).then(function(r){ return r.json(); }).then(function(j){ return !!j.ok; })
     .catch(function(){ return false; });
 }
@@ -2920,8 +2931,17 @@ function renderProgress(){
   if($('#profSave')) $('#profSave').addEventListener('click',function(){
     st.profile.name=($('#profName').value||'').trim();
     st.profile.cls=($('#profClass').value||'').trim();
-    save(); renderToday(); renderProgress(); toast('Сохранено');
+    save(); renderToday(); renderProgress(); pushToCabinet(); toast('Сохранено');
   });
+  // имя сохраняется само, без кнопки
+  if(pn) pn.addEventListener('input',function(){
+    st.profile.name=(pn.value||'').trim(); save(); renderToday();
+  });
+  if(pc) pc.addEventListener('input',function(){
+    st.profile.cls=(pc.value||'').trim(); save(); renderToday();
+  });
+  if(pn) pn.addEventListener('change',function(){ pushToCabinet(); });
+  if(pc) pc.addEventListener('change',function(){ pushToCabinet(); });
   if($('#profLock')) $('#profLock').addEventListener('change',function(){
     if(this.checked){ $('#pinBox').hidden=false; $('#profPin').focus(); }
     else{ st.profile.pin=''; save(); renderProgress(); toast('Код снят'); }
@@ -3005,7 +3025,7 @@ $('#cabBtn').addEventListener('click',function(){
 });
 window.addEventListener('pageshow',function(){ renderStreak(); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renderStreak(); });
-var APP_BUILD='uchus-v25';
+var APP_BUILD='uchus-v27';
 function healCache(){
   fetch('sw.js?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
     var m=t.match(/var CACHE = '(uchus-v\d+)'/);
